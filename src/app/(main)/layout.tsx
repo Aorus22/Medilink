@@ -3,6 +3,7 @@
 import { ReactNode, useState } from 'react';
 import Link from 'next/link';
 import { RightbarContext } from '@/context/RightbarContext';
+import { usePathname } from 'next/navigation';
 
 const logo = '/assets/Logo/medlink.png';
 
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <SidebarLink href="/laboratory" icon="bi-wallet" text="Laboratory" />
               <SidebarLink href="/pharmacy" icon="bi-capsule" text="Pharmacy" />
               <SidebarLink href="/healthcare-monitoring" icon="bi-gear-wide" text="Healthcare Monitoring" />
+              <SidebarLink href="/message" icon="bi-gear-wide" text="Message" />
             </nav>
           </div>
 
@@ -53,8 +55,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 }
 
 function SidebarLink({ href, icon, text }: { href: string; icon: string; text: string }) {
+  const pathname = usePathname();
+  const isActive = pathname === href;
+
   return (
-    <Link href={href} className="flex items-center gap-2 p-2 mb-2 rounded-lg text-gray-500 hover:bg-teal-500 hover:text-white transition">
+    <Link
+      href={href}
+      className={`flex items-center gap-2 p-2 mb-2 rounded-lg transition ${
+        isActive ? "bg-teal-500 text-white" : "text-gray-500 hover:bg-teal-500 hover:text-white"
+      }`}
+    >
       <i className={`bi ${icon}`}></i>
       <span>{text}</span>
     </Link>
@@ -102,7 +112,7 @@ function Rightbar() {
         <h4 className="font-semibold text-lg mb-4">Message</h4>
         <div className="p-3 bg-gradient-to-b from-teal-300 to-teal-700 text-white rounded-xl">
           <div className="flex items-center gap-3 mb-2">
-            <img src="/doctor-avatar.png" alt="Dr. Alfredo Torres" className="w-8 h-8 rounded-full" />
+            <img src="/assets/dashboard/doctor.svg" alt="Dr. Alfredo Torres" className="w-8 h-8 rounded-full" />
             <div>
               <strong>Dr. Alfredo Torres</strong><br />
               <small className="text-white text-opacity-80">1 Minute Ago</small>

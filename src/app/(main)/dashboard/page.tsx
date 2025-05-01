@@ -38,7 +38,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <img src="/avatar.jpg" alt="User" width={40} height={40} className="rounded-full" />
+            <img src="/assets/Team/marko.jpg" alt="User" width={40} height={40} className="rounded-full" />
             <div>
               <strong>Marko Refianto</strong>
               <br />

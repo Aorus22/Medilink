@@ -1,0 +1,124 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/db/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  username   String   @unique
+  password   String
+  name       String
+  birthdate  DateTime
+  address    String
+  profession String
+  religion   String
+  avatar     String
+
+  appointments Appointment[]
+  historicals  HistoricalData[]
+  pharmacies   Pharmacy[]
+  mriTests     MriTest[]
+  urineTests   UrineTest[]
+  bloodTests   BloodTest[]
+}
+
+model Doctor {
+  id         Int    @id @default(autoincrement())
+  about      String
+  name       String
+  specialist String
+  education  String
+  experience String
+
+  appointments Appointment[]
+}
+
+enum AppointmentStatus {
+  pending
+  confirmed
+  rejected
+}
+
+model Appointment {
+  id          Int               @id @default(autoincrement())
+  date        DateTime
+  purpose     String
+  information String
+  location    String
+  status      AppointmentStatus
+
+  idUser   Int
+  idDokter Int
+
+  user   User   @relation(fields: [idUser], references: [id])
+  doctor Doctor @relation(fields: [idDokter], references: [id])
+}
+
+model HistoricalData {
+  id        Int      @id @default(autoincrement())
+  parameter String
+  value     String
+  tgl       DateTime
+
+  idUser Int
+  user   User @relation(fields: [idUser], references: [id])
+}
+
+model Pharmacy {
+  id                   Int      @id @default(autoincrement())
+  namaObat             String
+  keteranganPenggunaan String
+  dosis                String
+  tanggalMulaiObat     DateTime
+  tanggalSelesaiObat   DateTime
+
+  idUser Int
+  user   User @relation(fields: [idUser], references: [id])
+}
+
+model MriTest {
+  id         Int      @id @default(autoincrement())
+  urlPhoto   String
+  keterangan String
+  tanggal    DateTime
+
+  idUser Int
+  user   User @relation(fields: [idUser], references: [id])
+}
+
+model UrineTest {
+  id      Int      @id @default(autoincrement())
+  warna   String
+  bau     String
+  ph      Float
+  glukosa String
+  protein String
+  tanggal DateTime
+
+  idUser Int
+  user   User @relation(fields: [idUser], references: [id])
+}
+
+model BloodTest {
+  id         Int      @id @default(autoincrement())
+  hemoglobin Float
+  leukosit   Float
+  trombosit  Float
+  gulaDarah  Float
+  kolesterol Float
+  tanggal    DateTime
+
+  idUser Int
+  user   User @relation(fields: [idUser], references: [id])
+}

@@ -1,21 +1,43 @@
-"use client"
+"use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
+import { Doctor } from "@/db/prisma";
 
 const doctorPlaceholder = "/assets/dashboard/doctor.svg";
 
 export default function DoctorProfile() {
   const { id } = useParams();
+  const pathname = usePathname();
+  const [doctor, setDoctor] = useState<Doctor | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const doctor = {
-    id: id,
-    name: "Dr. Sarah Johnson",
-    specialty: "Cardiologist",
-    experience: "10 years",
-    education: "MD, Harvard Medical School",
-    about: "Specialist in cardiovascular diseases with extensive experience...",
-  };
+  useEffect(() => {
+    const fetchDoctor = async () => {
+      try {
+        const response = await fetch(`/api/doctors/${id}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch doctor data");
+        }
+        const data = await response.json();
+        setDoctor(data);
+      } catch (err) {
+        setError("Failed to load doctor details");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchDoctor();
+    }
+  }, [id]);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>{error}</p>;
+  if (!doctor) return <p>Doctor not found</p>;
 
   return (
     <div className="p-6">
@@ -33,7 +55,7 @@ export default function DoctorProfile() {
             />
             <div className="flex-1">
               <h1 className="text-2xl font-bold">{doctor.name}</h1>
-              <p className="text-teal-600 text-xl">{doctor.specialty}</p>
+              <p className="text-teal-600 text-xl">{doctor.specialist}</p>
 
               <div className="mt-4 space-y-2">
                 <p>📚 Education: {doctor.education}</p>
@@ -48,9 +70,11 @@ export default function DoctorProfile() {
           </div>
 
           <div className="mt-8 flex gap-4">
-            <button className="bg-teal-600 text-white px-6 py-2 rounded-full hover:bg-teal-700">
-              Book Appointment
-            </button>
+            <Link href={`${pathname}/appointment`}>
+              <button className="bg-teal-600 text-white px-6 py-2 rounded-full hover:bg-teal-700">
+                Book Appointment
+              </button>
+            </Link>
             <button className="border border-teal-600 text-teal-600 px-6 py-2 rounded-full hover:bg-teal-50">
               Send Message
             </button>

@@ -1,15 +1,7 @@
-import { createContext, useState, ReactNode } from "react";
+import { createContext } from "react";
 
-export const RightbarContext = createContext<{ setRightbarOpen: (val: boolean | ((prev: boolean) => boolean)) => void }>({
-  setRightbarOpen: () => {},
-});
+type props = {
+  setRightbarOpen: (val: boolean | ((prev: boolean) => boolean)) => void
+}
 
-export const RightbarProvider = ({ children }: { children: ReactNode }) => {
-  const [rightbarOpen, setRightbarOpen] = useState(true);
-
-  return (
-    <RightbarContext.Provider value={{ setRightbarOpen }}>
-      {children}
-    </RightbarContext.Provider>
-  );
-};
+export const RightbarContext = createContext<props>({} as props);

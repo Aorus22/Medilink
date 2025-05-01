@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:alpine
+    container_name: medilink-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: medilinkdb
+      POSTGRES_USER: medilink_user
+      POSTGRES_PASSWORD: medilink_password
+    ports:
+      - 5432:5432
+    volumes:
+      - medilink-pgdata:/var/lib/postgresql/data
+
+volumes:
+  medilink-pgdata:
