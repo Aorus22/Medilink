@@ -3,7 +3,7 @@ import { PrismaClient } from '@/db/prisma';
 
 const prisma = new PrismaClient();
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: any) {
   try {
     const id = params.id;
     if (!id) {
