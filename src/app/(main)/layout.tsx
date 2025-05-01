@@ -13,9 +13,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768) {
+      if (window.innerWidth >= 1060) {
         setRightbarOpen(true);
         setSidebarOpen(true);
+      } else {
+        setRightbarOpen(false);
+        setSidebarOpen(false);
       }
     };
 
@@ -66,7 +69,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </button>
 
         {/* Main Content */}
-        <main className="flex-1 p-6 overflow-y-auto text-black">{children}</main>
+        <main className="mt-8 md:mt-0 flex-1 p-6 overflow-y-auto text-black">{children}</main>
 
         {/* Mobile Rightbar Toggle */}
         <button
@@ -78,7 +81,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
         {/* Rightbar */}
         {rightbarOpen && (
-          <aside className="w-[300px] p-5 bg-white border-l border-gray-300 md:block">
+          <aside className="absolute right-0 md:static w-[300px] p-5 bg-white border-l border-gray-300 md:block">
             <Rightbar />
           </aside>
         )}
