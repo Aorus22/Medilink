@@ -58,11 +58,11 @@ const Navbar = ({ isTopOfPage, selectedPage, setSelectedPage }: Props) => {
                   ))}
                 </div>
                 <div className={`${flexBetween} gap-8`}>
-                  <NextLink href="/diagnose" passHref>
+                  {/* <NextLink href="/diagnose" passHref>
                     <p className="hover:text-teal-600 hover:underline cursor-pointer">
                       Diagnose Now
                     </p>
-                  </NextLink>
+                  </NextLink> */}
                   <NextLink href="/dashboard" passHref>
                     <p className="hover:text-teal-600 hover:underline cursor-pointer">
                       Dashboard
@@ -119,7 +119,7 @@ const Navbar = ({ isTopOfPage, selectedPage, setSelectedPage }: Props) => {
                   onClick={() => setIsMenuToggled(false)}
                   className="hover:text-teal-600 underline cursor-pointer"
                 >
-                  Diagnose Now
+                  Dashboard
                 </p>
               </NextLink>
             </div>
