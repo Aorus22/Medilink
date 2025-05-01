@@ -12,6 +12,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const doctor = await prisma.doctor.findUnique({
       where: { id: parseInt(id, 10) },
+      include: { practiceHours: true },
     });
 
     if (!doctor) {

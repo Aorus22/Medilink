@@ -41,9 +41,21 @@ model Doctor {
   specialist String
   education  String
   experience String
+  location   String
 
   appointments Appointment[]
   messages     Message[] @relation("DoctorMessages")
+  practiceHours PracticeHour[]
+}
+
+model PracticeHour {
+  id          Int      @id @default(autoincrement())
+  startTime   String
+  endTime     String
+  dayOfWeek   String
+
+  doctorId    Int
+  doctor      Doctor   @relation(fields: [doctorId], references: [id])
 }
 
 enum Sender {
@@ -73,7 +85,6 @@ model Appointment {
   date        DateTime
   purpose     String
   information String
-  location    String
   status      AppointmentStatus
 
   idUser   Int

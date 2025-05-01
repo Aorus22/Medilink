@@ -1,68 +1,58 @@
 "use client"
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+interface Appointment {
+  id: number;
+  doctorName: string;
+  doctorSpecialty: string;
+  date: string;
+  time: string;
+  purpose: string;
+  status: string;
+  location: string;
+  notes: string;
+}
 
 export default function AppointmentPage() {
   const [appointmentFilter, setAppointmentFilter] = useState("upcoming");
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const appointments = [
-    {
-      id: 1,
-      doctorName: "Dr. Sarah Johnson",
-      doctorSpecialty: "Cardiologist",
-      date: "2025-05-03",
-      time: "09:30 AM",
-      purpose: "Regular Checkup",
-      status: "confirmed",
-      location: "Main Hospital, Floor 3",
-      notes: "Please bring your previous test results"
-    },
-    {
-      id: 2,
-      doctorName: "Dr. Michael Chen",
-      doctorSpecialty: "Neurologist",
-      date: "2025-05-10",
-      time: "02:15 PM",
-      purpose: "Follow-up Consultation",
-      status: "confirmed",
-      location: "Neurology Clinic",
-      notes: "MRI results will be reviewed"
-    },
-    {
-      id: 3,
-      doctorName: "Dr. Lisa Wong",
-      doctorSpecialty: "Dermatologist",
-      date: "2025-04-25",
-      time: "11:00 AM",
-      purpose: "Skin Assessment",
-      status: "completed",
-      location: "Dermatology Center",
-      notes: "Treatment plan was provided"
-    },
-    {
-      id: 4,
-      doctorName: "Dr. James Wilson",
-      doctorSpecialty: "Orthopedic Surgeon",
-      date: "2025-04-18",
-      time: "03:30 PM",
-      purpose: "Post-surgery Checkup",
-      status: "completed",
-      location: "Orthopedic Department",
-      notes: "Physical therapy recommendations given"
-    },
-    {
-      id: 5,
-      doctorName: "Dr. Emily Rodriguez",
-      doctorSpecialty: "General Practitioner",
-      date: "2025-05-21",
-      time: "10:45 AM",
-      purpose: "Annual Physical",
-      status: "pending",
-      location: "Family Medicine Clinic",
-      notes: "Fasting required for blood work"
+  useEffect(() => {
+    async function fetchAppointments() {
+      try {
+        const response = await fetch('/api/appointments?id=1');
+        if (!response.ok) {
+          throw new Error('Failed to fetch appointments');
+        }
+        const data = await response.json();
+        const formattedAppointments: Appointment[] = data.map((appt: any) => ({
+          id: appt.id,
+          doctorName: appt.doctor.name,
+          doctorSpecialty: appt.doctor.specialist,
+          date: new Date(appt.date).toISOString().split('T')[0],
+          time: new Date(appt.date).toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+          }),
+          purpose: appt.purpose,
+          status: appt.status,
+          location: appt.doctor.location,
+          notes: appt.information,
+        }));
+        setAppointments(formattedAppointments);
+        setLoading(false);
+      } catch (err: any) {
+        setError(err.message);
+        setLoading(false);
+      }
     }
-  ];
+    fetchAppointments();
+  }, []);
 
   const today = new Date();
 
@@ -75,10 +65,11 @@ export default function AppointmentPage() {
     } else if (appointmentFilter === "all") {
       return true;
     }
+    return true;
   });
 
   const getStatusClass = (status: string) => {
-    switch(status) {
+    switch (status) {
       case "confirmed": return "bg-green-100 text-green-800";
       case "pending": return "bg-yellow-100 text-yellow-800";
       case "completed": return "bg-blue-100 text-blue-800";
@@ -86,6 +77,22 @@ export default function AppointmentPage() {
       default: return "bg-gray-100 text-gray-800";
     }
   };
+
+  if (loading) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-lg text-gray-600">Loading appointments...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-lg text-red-600">Error: {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -116,7 +123,7 @@ export default function AppointmentPage() {
           </button>
         </div>
         <Link
-          href="/schedule-appointment"
+          href="/doctors"
           className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition flex items-center"
         >
           <i className="bi bi-plus-circle mr-2"></i>
@@ -181,7 +188,7 @@ export default function AppointmentPage() {
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No appointments found</h3>
             <p className="text-gray-500 mb-6">There are no {appointmentFilter} appointments to display</p>
-            <Link href="/schedule-appointment" className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition">
+            <Link href="/doctors" className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition">
               Schedule an Appointment
             </Link>
           </div>

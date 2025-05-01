@@ -138,7 +138,25 @@ exports.Prisma.DoctorScalarFieldEnum = {
   name: 'name',
   specialist: 'specialist',
   education: 'education',
-  experience: 'experience'
+  experience: 'experience',
+  location: 'location'
+};
+
+exports.Prisma.PracticeHourScalarFieldEnum = {
+  id: 'id',
+  startTime: 'startTime',
+  endTime: 'endTime',
+  dayOfWeek: 'dayOfWeek',
+  doctorId: 'doctorId'
+};
+
+exports.Prisma.MessageScalarFieldEnum = {
+  id: 'id',
+  sender: 'sender',
+  content: 'content',
+  time: 'time',
+  userId: 'userId',
+  doctorId: 'doctorId'
 };
 
 exports.Prisma.AppointmentScalarFieldEnum = {
@@ -146,7 +164,6 @@ exports.Prisma.AppointmentScalarFieldEnum = {
   date: 'date',
   purpose: 'purpose',
   information: 'information',
-  location: 'location',
   status: 'status',
   idUser: 'idUser',
   idDokter: 'idDokter'
@@ -209,6 +226,16 @@ exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
 };
+
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+exports.Sender = exports.$Enums.Sender = {
+  USER: 'USER',
+  DOCTOR: 'DOCTOR'
+};
+
 exports.AppointmentStatus = exports.$Enums.AppointmentStatus = {
   pending: 'pending',
   confirmed: 'confirmed',
@@ -218,6 +245,8 @@ exports.AppointmentStatus = exports.$Enums.AppointmentStatus = {
 exports.Prisma.ModelName = {
   User: 'User',
   Doctor: 'Doctor',
+  PracticeHour: 'PracticeHour',
+  Message: 'Message',
   Appointment: 'Appointment',
   HistoricalData: 'HistoricalData',
   Pharmacy: 'Pharmacy',

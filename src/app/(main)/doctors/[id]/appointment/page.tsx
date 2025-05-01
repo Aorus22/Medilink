@@ -6,25 +6,22 @@ import Link from "next/link";
 
 const doctorImage = "/assets/dashboard/doctor.svg";
 
-type WorkingHour = {
-  day: string;
-  hours: string;
+type PracticeHour = {
+  id: number;
+  startTime: string;
+  endTime: string;
+  dayOfWeek: string;
+  doctorId: number;
 };
 
 type Doctor = {
-  id: string;
+  id: number;
   name: string;
-  specialty: string;
+  specialist: string;
+  education: string;
   experience: string;
   about: string;
-  workingHours: WorkingHour[];
-};
-
-type Slot = {
-  id: string;
-  startTime: string;
-  endTime: string;
-  isAvailable: boolean;
+  practiceHours: PracticeHour[];
 };
 
 export default function DoctorAppointmentPage() {
@@ -37,35 +34,18 @@ export default function DoctorAppointmentPage() {
   const [error, setError] = useState<string | null>(null);
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
-  const [availableSlots, setAvailableSlots] = useState<Slot[]>([]);
   const [bookingInProgress, setBookingInProgress] = useState<boolean>(false);
 
   useEffect(() => {
-    const fetchDoctorAndSlots = async () => {
+    const fetchDoctor = async () => {
       try {
         setLoading(true);
-
-        const doctorData: Doctor = {
-          id: id || "1",
-          name: "Dr. Amanda Wilson",
-          specialty: "Cardiologist",
-          experience: "15 years",
-          about:
-            "Dr. Amanda Wilson is a board-certified cardiologist with over 15 years of experience in treating cardiovascular diseases.",
-          workingHours: [
-            { day: "Monday", hours: "9:00 AM - 5:00 PM" },
-            { day: "Tuesday", hours: "9:00 AM - 5:00 PM" },
-            { day: "Wednesday", hours: "9:00 AM - 1:00 PM" },
-            { day: "Thursday", hours: "9:00 AM - 5:00 PM" },
-            { day: "Friday", hours: "9:00 AM - 4:00 PM" },
-            { day: "Saturday", hours: "10:00 AM - 1:00 PM" },
-            { day: "Sunday", hours: "Closed" },
-          ],
-        };
-
+        const response = await fetch(`/api/doctors/${id}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch doctor data");
+        }
+        const doctorData: Doctor = await response.json();
         setDoctor(doctorData);
-        await fetchAvailableSlots(selectedDate, doctorData);
       } catch (err) {
         setError("Failed to load doctor information");
       } finally {
@@ -73,69 +53,17 @@ export default function DoctorAppointmentPage() {
       }
     };
 
-    fetchDoctorAndSlots();
+    fetchDoctor();
   }, [id]);
-
-  useEffect(() => {
-    if (doctor) {
-      fetchAvailableSlots(selectedDate, doctor);
-    }
-  }, [selectedDate, doctor]);
-
-  const fetchAvailableSlots = async (date: Date, doc: Doctor) => {
-    try {
-      const formattedDate = formatDate(date);
-      const dayOfWeek = date.getDay();
-      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-      const currentDayName = dayNames[dayOfWeek];
-
-      const workingHoursForDay = doc.workingHours.find((wh) => wh.day === currentDayName);
-      let slots: Slot[] = [];
-
-      if (workingHoursForDay && workingHoursForDay.hours !== "Closed") {
-        const [startTime, endTime] = workingHoursForDay.hours
-          .split(" - ")
-          .map((t) => convertTo24Hour(t));
-
-        let currentHour = startTime;
-        while (currentHour < endTime) {
-          const startHour = currentHour;
-          const endHour = currentHour + 1 > 24 ? 24 : currentHour + 1;
-          const isBooked = Math.random() > 0.7;
-
-          slots.push({
-            id: `${formattedDate}-${startHour}`,
-            startTime: formatHourTo12Hour(startHour),
-            endTime: formatHourTo12Hour(endHour),
-            isAvailable: !isBooked,
-          });
-
-          currentHour = endHour;
-        }
-      }
-
-      setAvailableSlots(slots);
-    } catch (err) {
-      console.error("Error fetching available slots:", err);
-      setAvailableSlots([]);
-    }
-  };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newDate = new Date(e.target.value);
     setSelectedDate(newDate);
-    setSelectedSlot(null);
-  };
-
-  const handleSlotSelection = (slot: Slot) => {
-    if (slot.isAvailable) {
-      setSelectedSlot(slot.id === selectedSlot ? null : slot.id);
-    }
   };
 
   const handleBookAppointment = async () => {
-    if (!selectedSlot || !doctor) {
-      alert("Please select a time slot");
+    if (!doctor) {
+      alert("Doctor information not available");
       return;
     }
 
@@ -143,9 +71,17 @@ export default function DoctorAppointmentPage() {
       setBookingInProgress(true);
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      const slot = availableSlots.find((s) => s.id === selectedSlot);
-      alert(`Appointment booked successfully with ${doctor.name} for ${formatDate(selectedDate)} at ${slot?.startTime}`);
+      const practiceHour = getPracticeHourForDate();
+      if (!practiceHour) {
+        alert("No appointment available for this date");
+        return;
+      }
 
+      alert(
+        `Appointment booked successfully with ${doctor.name} for ${formatDisplayDate(
+          selectedDate
+        )} from ${practiceHour.startTime} to ${practiceHour.endTime}`
+      );
       router.push("/appointments");
     } catch (err) {
       alert("Failed to book appointment. Please try again.");
@@ -165,35 +101,14 @@ export default function DoctorAppointmentPage() {
       day: "numeric",
     });
 
-  const convertTo24Hour = (timeStr: string): number => {
-    const [time, modifier] = timeStr.split(" ");
-    let [hours, minutes = "0"] = time.split(":");
-    let h = parseInt(hours);
-    const m = parseInt(minutes);
+  const getPracticeHourForDate = (): PracticeHour | null => {
+    if (!doctor) return null;
 
-    if (h === 12) {
-      h = modifier === "PM" ? 12 : 0;
-    } else if (modifier === "PM") {
-      h += 12;
-    }
-
-    return h + m / 60;
-  };
-
-  const formatHourTo12Hour = (hour: number): string => {
-    const floorHour = Math.floor(hour);
-    const minutes = Math.round((hour - floorHour) * 60);
-    let period = "AM";
-    let displayHour = floorHour;
-
-    if (floorHour >= 12) {
-      period = "PM";
-      if (floorHour > 12) displayHour = floorHour - 12;
-    }
-
-    if (displayHour === 0) displayHour = 12;
-
-    return `${displayHour}:${minutes.toString().padStart(2, "0")} ${period}`;
+    const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const currentDayName = dayNames[selectedDate.getDay()];
+    return (
+      doctor.practiceHours.find((ph) => ph.dayOfWeek === currentDayName) || null
+    );
   };
 
   if (loading) {
@@ -223,6 +138,8 @@ export default function DoctorAppointmentPage() {
 
   if (!doctor) return null;
 
+  const practiceHour = getPracticeHourForDate();
+
   return (
     <main className="flex-grow p-5 overflow-y-auto">
       {/* Navigation breadcrumb */}
@@ -246,7 +163,7 @@ export default function DoctorAppointmentPage() {
             </div>
             <div className="flex-grow">
               <h2 className="text-2xl font-bold">{doctor.name}</h2>
-              <p className="text-teal-100">{doctor.specialty}</p>
+              <p className="text-teal-100">{doctor.specialist}</p>
             </div>
           </div>
         </div>
@@ -265,36 +182,21 @@ export default function DoctorAppointmentPage() {
               value={formatDate(selectedDate)}
               onChange={handleDateChange}
             />
-            <p className="text-sm text-gray-500 mt-2">Showing available slots for {formatDisplayDate(selectedDate)}</p>
+            <p className="text-sm text-gray-500 mt-2">Showing availability for {formatDisplayDate(selectedDate)}</p>
           </div>
 
-          {/* Time Slots */}
+          {/* Practice Hours */}
           <div className="mb-6">
-            <label className="block text-gray-700 mb-2 font-medium">Select Time Slot</label>
-
-            {availableSlots.length === 0 ? (
-              <div className="bg-gray-50 rounded-xl p-4 text-center">
-                <p className="text-gray-500">No appointments available on this day</p>
+            <label className="block text-gray-700 mb-2 font-medium">Practice Hours</label>
+            {practiceHour ? (
+              <div className="bg-white rounded-lg border border-gray-200 p-3">
+                <p className="font-medium">
+                  {practiceHour.startTime} - {practiceHour.endTime}
+                </p>
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-3">
-                {availableSlots.map((slot) => (
-                  <button
-                    key={slot.id}
-                    onClick={() => handleSlotSelection(slot)}
-                    disabled={!slot.isAvailable}
-                    className={`p-3 rounded-lg border transition ${
-                      selectedSlot === slot.id
-                        ? 'bg-teal-500 text-white border-teal-500'
-                        : slot.isAvailable
-                        ? 'bg-white hover:bg-teal-50 border-gray-200 hover:border-teal-500'
-                        : 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200'
-                    }`}
-                  >
-                    <div className="font-medium">{slot.startTime}</div>
-                    <div className="text-sm">to {slot.endTime}</div>
-                  </button>
-                ))}
+              <div className="bg-gray-50 rounded-xl p-4 text-center">
+                <p className="text-gray-500">No appointments available on this day</p>
               </div>
             )}
           </div>
@@ -302,9 +204,9 @@ export default function DoctorAppointmentPage() {
           {/* Booking Button */}
           <button
             onClick={handleBookAppointment}
-            disabled={!selectedSlot || bookingInProgress}
+            disabled={!practiceHour || bookingInProgress}
             className={`w-full py-3 px-4 rounded-lg text-white font-medium ${
-              selectedSlot && !bookingInProgress
+              practiceHour && !bookingInProgress
                 ? 'bg-teal-500 hover:bg-teal-600'
                 : 'bg-gray-300 cursor-not-allowed'
             }`}

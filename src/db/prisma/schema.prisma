@@ -25,6 +25,7 @@ model User {
   religion   String
   avatar     String
 
+  messages     Message[]        @relation("UserMessages")
   appointments Appointment[]
   historicals  HistoricalData[]
   pharmacies   Pharmacy[]
@@ -40,8 +41,37 @@ model Doctor {
   specialist String
   education  String
   experience String
+  location   String
 
-  appointments Appointment[]
+  appointments  Appointment[]
+  messages      Message[]      @relation("DoctorMessages")
+  practiceHours PracticeHour[]
+}
+
+model PracticeHour {
+  id        Int    @id @default(autoincrement())
+  startTime String
+  endTime   String
+  dayOfWeek String
+
+  doctorId Int
+  doctor   Doctor @relation(fields: [doctorId], references: [id])
+}
+
+enum Sender {
+  USER
+  DOCTOR
+}
+
+model Message {
+  id       Int      @id @default(autoincrement())
+  sender   Sender
+  content  String
+  time     DateTime @default(now())
+  userId   Int?
+  doctorId Int?
+  user     User?    @relation("UserMessages", fields: [userId], references: [id])
+  doctor   Doctor?  @relation("DoctorMessages", fields: [doctorId], references: [id])
 }
 
 enum AppointmentStatus {
@@ -55,7 +85,6 @@ model Appointment {
   date        DateTime
   purpose     String
   information String
-  location    String
   status      AppointmentStatus
 
   idUser   Int
