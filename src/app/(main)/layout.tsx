@@ -1,6 +1,6 @@
 "use client"
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { RightbarContext } from '@/context/RightbarContext';
 import { usePathname } from 'next/navigation';
@@ -9,46 +9,79 @@ const logo = '/assets/Logo/medlink.png';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   const [rightbarOpen, setRightbarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setRightbarOpen(true);
+        setSidebarOpen(true);
+      }
+    };
+
+    handleResize();
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
     <RightbarContext.Provider value={{ setRightbarOpen }}>
-      <div className="flex h-screen text-black">
+      <div className="flex h-screen text-black relative">
         {/* Sidebar */}
-        <aside className="w-[250px] bg-white p-5 flex flex-col justify-between border-r border-gray-300">
-          <div>
-            <div className="flex justify-center items-center mb-5">
-              <Link href="/">
-                <img src={logo} alt="Logo" className="w-24 h-28 object-contain" />
-              </Link>
+        {sidebarOpen && (
+          <aside className="z-10 absolute md:static w-[250px] bg-white p-5 flex flex-col justify-between border-r border-gray-300 md:block">
+            <div>
+              <div className="flex justify-center items-center mb-5">
+                <Link href="/">
+                  <img src={logo} alt="Logo" className="w-24 h-28 object-contain" />
+                </Link>
+              </div>
+              <nav className="flex flex-col">
+                <SidebarLink href="/dashboard" icon="bi-house-door" text="Dashboard" />
+                <SidebarLink href="/appointment" icon="bi-clipboard-check-fill" text="Appointment" />
+                <SidebarLink href="/doctors" icon="bi-person-standing" text="Doctors" />
+                <SidebarLink href="/healthcare" icon="bi-chat-right-text" text="Healthcare" />
+                <SidebarLink href="/laboratory" icon="bi-wallet" text="Laboratory" />
+                <SidebarLink href="/pharmacy" icon="bi-capsule" text="Pharmacy" />
+                <SidebarLink href="/healthcare-monitoring" icon="bi-gear-wide" text="Healthcare Monitoring" />
+                <SidebarLink href="/message" icon="bi-gear-wide" text="Message" />
+              </nav>
             </div>
-            <nav className="flex flex-col">
-              <SidebarLink href="/dashboard" icon="bi-house-door" text="Dashboard" />
-              <SidebarLink href="/appointment" icon="bi-clipboard-check-fill" text="Appointment" />
-              <SidebarLink href="/doctors" icon="bi-person-standing" text="Doctors" />
-              <SidebarLink href="/healthcare" icon="bi-chat-right-text" text="Healthcare" />
-              <SidebarLink href="/laboratory" icon="bi-wallet" text="Laboratory" />
-              <SidebarLink href="/pharmacy" icon="bi-capsule" text="Pharmacy" />
-              <SidebarLink href="/healthcare-monitoring" icon="bi-gear-wide" text="Healthcare Monitoring" />
-              <SidebarLink href="/message" icon="bi-gear-wide" text="Message" />
-            </nav>
-          </div>
 
-          <div className="flex flex-col gap-2">
-            <SidebarLink href="/account" icon="bi-person-fill" text="My Account" />
-            <SidebarLink href="/logout" icon="bi-box-arrow-right" text="Sign Out" />
-            <SidebarLink href="/help" icon="bi-question-circle-fill" text="Help" />
-          </div>
-        </aside>
+            <div className="flex flex-col gap-2">
+              <SidebarLink href="/account" icon="bi-person-fill" text="My Account" />
+              <SidebarLink href="/logout" icon="bi-box-arrow-right" text="Sign Out" />
+              <SidebarLink href="/help" icon="bi-question-circle-fill" text="Help" />
+            </div>
+          </aside>
+        )}
+
+        {/* Mobile Sidebar Toggle */}
+        <button
+          className="md:hidden absolute top-4 left-4 z-50 bg-white p-2 rounded-full shadow border"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+        >
+          <i className={`bi ${sidebarOpen ? 'bi-x-lg' : 'bi-list'}`}></i>
+        </button>
 
         {/* Main Content */}
         <main className="flex-1 p-6 overflow-y-auto text-black">{children}</main>
 
+        {/* Mobile Rightbar Toggle */}
+        <button
+          className="md:hidden absolute top-4 right-4 z-50 bg-white p-2 rounded-full shadow border"
+          onClick={() => setRightbarOpen(!rightbarOpen)}
+        >
+          <i className={`bi ${rightbarOpen ? 'bi-x-lg' : 'bi-layout-sidebar-inset-reverse'}`}></i>
+        </button>
+
         {/* Rightbar */}
-        {rightbarOpen &&
-          <aside className="w-[300px] p-5 bg-white border-l border-gray-300">
+        {rightbarOpen && (
+          <aside className="w-[300px] p-5 bg-white border-l border-gray-300 md:block">
             <Rightbar />
           </aside>
-        }
+        )}
       </div>
     </RightbarContext.Provider>
   );
