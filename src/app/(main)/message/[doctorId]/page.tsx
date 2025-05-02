@@ -19,7 +19,7 @@ interface Message {
 }
 
 export default function DoctorChatPage() {
-  const { id } = useParams();
+  const { doctorId: id } = useParams();
   const doctorId = parseInt(id as string);
   const [message, setMessage] = useState<string>("");
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
@@ -51,20 +51,26 @@ export default function DoctorChatPage() {
     }
   }, [chatMessages]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
 
-    const newMessage: Message = {
-      id: chatMessages.length + 1,
-      sender: "USER",
-      content: message.trim(),
-      time: new Date().toISOString(),
-      doctor: doctor!,
-    };
+    const newMessageContent = message.trim();
 
-    setChatMessages([...chatMessages, newMessage]);
     setMessage("");
+
+    try {
+      const res = await fetch(`/api/message/${doctorId}`, {
+        method: "POST",
+        body: JSON.stringify({ content: newMessageContent }),
+      });
+
+      const savedMessage: Message = await res.json();
+
+      setChatMessages([...chatMessages, savedMessage]);
+    } catch (error) {
+      console.error("Failed to send message:", error);
+    }
   };
 
   const getInitials = (name: string) =>

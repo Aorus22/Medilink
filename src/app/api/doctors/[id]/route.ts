@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest, { params }: any) {
   try {
-    const id = params.id;
+    const id = (await params).id;
     if (!id) {
       return NextResponse.json({ error: 'Missing ID parameter' }, { status: 400 });
     }
