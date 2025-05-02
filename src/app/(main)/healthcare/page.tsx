@@ -2,9 +2,9 @@ import Link from "next/link";
 
 export default function HealthcarePage() {
   const services = [
-    { id: 1, name: "Medical Checkup", icon: "bi-heart-pulse" },
-    { id: 2, name: "Vaccination", icon: "bi-shield-plus" },
-    { id: 3, name: "Emergency Care", icon: "bi-ambulance" },
+    { link: "/healthcare/medical-checkup", name: "Medical Checkup", icon: "bi-heart-pulse" },
+    { link: "/healthcare/vaccination", name: "Vaccination", icon: "bi-shield-plus" },
+    { link: "/message", name: "Emergency Care", icon: "bi-hospital" },
   ];
 
   return (
@@ -15,10 +15,10 @@ export default function HealthcarePage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {services.map((service) => (
+        {services.map((service, index) => (
           <Link
-            key={service.id}
-            href={`/healthcare/${service.id}`}
+            key={index}
+            href={`${service.link}`}
             className="service-card"
           >
             <div className="flex flex-col items-center p-6">

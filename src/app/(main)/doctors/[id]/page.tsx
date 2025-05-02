@@ -35,7 +35,12 @@ export default function DoctorProfile() {
     }
   }, [id]);
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return (
+    <div className="flex justify-center items-center h-full">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
+    </div>
+  );
+
   if (error) return <p>{error}</p>;
   if (!doctor) return <p>Doctor not found</p>;
 

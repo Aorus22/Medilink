@@ -87,21 +87,23 @@ model Appointment {
   information String
   status      AppointmentStatus
 
-  idUser   Int
-  idDokter Int
+  userId   Int
+  doctorId Int
 
-  user   User   @relation(fields: [idUser], references: [id])
-  doctor Doctor @relation(fields: [idDokter], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+  doctor Doctor @relation(fields: [doctorId], references: [id])
 }
 
 model HistoricalData {
-  id        Int      @id @default(autoincrement())
-  parameter String
-  value     String
-  tgl       DateTime
+  id          Int      @id @default(autoincrement())
+  parameter   String
+  value       String
+  unit        String
+  information String
+  date        DateTime
 
-  idUser Int
-  user   User @relation(fields: [idUser], references: [id])
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 }
 
 model Pharmacy {
@@ -112,8 +114,8 @@ model Pharmacy {
   tanggalMulaiObat  DateTime
   tanggalSelesaiObat DateTime
 
-  idUser Int
-  user   User @relation(fields: [idUser], references: [id])
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 }
 
 model MriTest {
@@ -122,8 +124,8 @@ model MriTest {
   keterangan String
   tanggal   DateTime
 
-  idUser Int
-  user   User @relation(fields: [idUser], references: [id])
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 }
 
 model UrineTest {
@@ -133,10 +135,10 @@ model UrineTest {
   ph      Float
   glukosa String
   protein String
-  tanggal DateTime
+  date    DateTime
 
-  idUser Int
-  user   User @relation(fields: [idUser], references: [id])
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 }
 
 model BloodTest {
@@ -146,8 +148,8 @@ model BloodTest {
   trombosit  Float
   gulaDarah  Float
   kolesterol Float
-  tanggal    DateTime
+  date    DateTime
 
-  idUser Int
-  user   User @relation(fields: [idUser], references: [id])
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 }

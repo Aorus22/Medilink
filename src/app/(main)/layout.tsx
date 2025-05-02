@@ -70,9 +70,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               </nav>
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col">
               <SidebarLink href="/account" icon="bi-person-fill" text="My Account" handleNavigate={handleNavigate} />
-              <SidebarLink href="/help" icon="bi-question-circle-fill" text="Help" handleNavigate={handleNavigate} />
+              {/* <SidebarLink href="/help" icon="bi-question-circle-fill" text="Help" handleNavigate={handleNavigate} /> */}
               <button
                 onClick={logout}
                 className="flex items-center gap-2 p-2 mb-2 rounded-lg text-gray-500 hover:bg-teal-500 hover:text-white transition w-full text-left"

@@ -73,7 +73,7 @@ async function main() {
     data: [
       {
         username: "marko123",
-        password: hashed("securepassword"),
+        password: hashed("passwordUser1"),
         name: "Marko",
         birthdate: new Date("1990-01-01"),
         address: "Jakarta",
@@ -83,7 +83,7 @@ async function main() {
       },
       {
         username: "muhammadalexander",
-        password: hashed("passwordUser1"),
+        password: hashed("passwordUser2"),
         name: "Muhammad Alexander",
         birthdate: new Date("2003-03-03"),
         address: "Surakarta",
@@ -93,7 +93,7 @@ async function main() {
       },
       {
         username: "alyza28",
-        password: hashed("passwordUser2"),
+        password: hashed("passwordUser3"),
         name: "Alyza",
         birthdate: new Date("1998-08-28"),
         address: "Karanganyar",
@@ -103,7 +103,7 @@ async function main() {
       },
       {
         username: "rafael99",
-        password: hashed("passwordUser3"),
+        password: hashed("passwordUser4"),
         name: "Rafael",
         birthdate: new Date("1999-05-05"),
         address: "Solo",
@@ -119,7 +119,7 @@ async function main() {
   const doctor1 = await prisma.doctor.findFirst({ where: { name: "Dr. Amanda Wilson" } });
   const user = await prisma.user.findFirst({ where: { name: "Marko" } });
 
-  await prisma.message.createMany({
+  const messages = await prisma.message.createMany({
     data: [
       {
         sender: "DOCTOR",
@@ -180,6 +180,8 @@ async function main() {
     ]
   });
 
+  console.log("Messages added:", messages);
+
   const appointments = await prisma.appointment.createMany({
     data: [
       {
@@ -187,29 +189,76 @@ async function main() {
         purpose: "Initial cardiac consultation",
         information: "Patient reported occasional chest pain and shortness of breath.",
         status: "confirmed",
-        idUser: user.id,
-        idDokter: doctor1.id,
+        userId: user.id,
+        doctorId: doctor1.id,
       },
       {
         date: new Date("2024-04-22T14:00:00"),
         purpose: "Follow-up appointment",
         information: "Review of initial medication and symptoms progress.",
         status: "confirmed",
-        idUser: user.id,
-        idDokter: doctor1.id,
+        userId: user.id,
+        doctorId: doctor1.id,
       },
       {
         date: new Date("2025-05-01T11:00:00"),
         purpose: "Routine check-up",
         information: "Patient has been experiencing chest pain occasionally.",
         status: "pending",
-        idUser: user.id,
-        idDokter: doctor1.id,
+        userId: user.id,
+        doctorId: doctor1.id,
       },
     ],
   });
 
   console.log("Appointments created:", appointments);
+
+  const historicalData = await prisma.historicalData.createMany({
+    data: [
+      {
+        parameter: "Temperature",
+        value: "37.5",
+        unit: " °C",
+        information: "Normal",
+        date: new Date("2024-04-15T10:00:00"),
+        userId: user.id,
+      },
+      {
+        parameter: "Blood Pressure",
+        value: "120/80",
+        unit: " mmHg",
+        information: "Normal",
+        date: new Date("2024-04-15T10:00:00"),
+        userId: user.id,
+      },
+      {
+        parameter: "Heart Rate",
+        value: "78",
+        unit: "BPM",
+        information: "Normal",
+        date: new Date("2024-04-15T10:00:00"),
+        userId: user.id,
+      },
+      {
+        parameter: "SPO2",
+        value: "98",
+        unit: "%",
+        information: "Normal",
+        date: new Date("2024-04-15T10:00:00"),
+        userId: user.id,
+      },
+      {
+        parameter: "Temperature",
+        value: "38.2",
+        unit: "°C",
+        information: "Elevated",
+        date: new Date("2024-04-14T10:00:00"),
+        userId: user.id,
+      }
+    ]
+  })
+
+  console.log("Historical Data created:", historicalData);
 
   const allDoctors = await prisma.doctor.findMany();
 
@@ -234,9 +283,12 @@ async function main() {
     },
   ]);
 
-  await prisma.practiceHour.createMany({
+  const practiceHour = await prisma.practiceHour.createMany({
     data: practiceHoursData,
   });
+
+  console.log("practiceHour added:", practiceHour);
+
 }
 
 main()

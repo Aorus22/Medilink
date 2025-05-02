@@ -1,70 +1,37 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
-interface Doctor {
-  id: number;
+interface AllMessageResponse {
+  doctorId: number;
   name: string;
   specialty: string;
   avatar: string | null;
   lastMessage: string;
   lastMessageTime: string;
-  unread: number;
 }
 
 export default function MessageListPage() {
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const router = useRouter();
+  const [doctors, setDoctors] = useState<AllMessageResponse[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const doctors: Doctor[] = [
-    {
-      id: 1,
-      name: "Dr. Amanda Wilson",
-      specialty: "Cardiologist",
-      avatar: null,
-      lastMessage: "Please let me know if you have any questions about your medication.",
-      lastMessageTime: "09:45 AM",
-      unread: 2
-    },
-    {
-      id: 2,
-      name: "Dr. James Rodriguez",
-      specialty: "Neurologist",
-      avatar: null,
-      lastMessage: "Your test results look good. We'll discuss in our next appointment.",
-      lastMessageTime: "Yesterday",
-      unread: 0
-    },
-    {
-      id: 3,
-      name: "Dr. Sarah Chen",
-      specialty: "Dermatologist",
-      avatar: null,
-      lastMessage: "Remember to apply the cream twice daily as prescribed.",
-      lastMessageTime: "Yesterday",
-      unread: 0
-    },
-    {
-      id: 4,
-      name: "Dr. Robert Miller",
-      specialty: "Pediatrician",
-      avatar: null,
-      lastMessage: "Your child's vaccination is due next week. Please schedule an appointment.",
-      lastMessageTime: "May 20",
-      unread: 0
-    },
-    {
-      id: 5,
-      name: "Dr. Emily Johnson",
-      specialty: "Psychiatrist",
-      avatar: null,
-      lastMessage: "How are you feeling after our last session?",
-      lastMessageTime: "May 18",
-      unread: 0
-    }
-  ];
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const res = await fetch("/api/message");
+        const data = await res.json();
+        setDoctors(data);
+      } catch (error) {
+        console.error("Failed to fetch messages:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMessages();
+  }, []);
 
   const filteredDoctors = doctors.filter((doctor) =>
     doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -111,11 +78,15 @@ export default function MessageListPage() {
 
       {/* Messages list */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        {filteredDoctors.length > 0 ? (
+        {loading ? (
+          <div className="flex justify-center items-center h-full">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
+          </div>
+        ) : filteredDoctors.length > 0 ? (
           filteredDoctors.map((doctor) => (
             <Link
-              href={`/message/${doctor.id}`}
-              key={doctor.id}
+              href={`/message/${doctor.doctorId}`}
+              key={doctor.doctorId}
               className="block"
             >
               <div className="p-4 border-b border-gray-200 flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition">
@@ -127,16 +98,13 @@ export default function MessageListPage() {
                       {getInitials(doctor.name)}
                     </div>
                   )}
-                  {doctor.unread > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-teal-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center border-2 border-white">
-                      {doctor.unread}
-                    </span>
-                  )}
                 </div>
                 <div className="flex-grow min-w-0">
                   <div className="flex justify-between items-start">
                     <h3 className="font-medium truncate">{doctor.name}</h3>
-                    <span className="text-xs text-gray-500 whitespace-nowrap ml-2">{doctor.lastMessageTime}</span>
+                    <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                      {new Date(doctor.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
                   <p className="text-sm text-gray-600 truncate">{doctor.lastMessage}</p>
                   <p className="text-xs text-teal-600">{doctor.specialty}</p>

@@ -165,16 +165,18 @@ exports.Prisma.AppointmentScalarFieldEnum = {
   purpose: 'purpose',
   information: 'information',
   status: 'status',
-  idUser: 'idUser',
-  idDokter: 'idDokter'
+  userId: 'userId',
+  doctorId: 'doctorId'
 };
 
 exports.Prisma.HistoricalDataScalarFieldEnum = {
   id: 'id',
   parameter: 'parameter',
   value: 'value',
-  tgl: 'tgl',
-  idUser: 'idUser'
+  unit: 'unit',
+  information: 'information',
+  date: 'date',
+  userId: 'userId'
 };
 
 exports.Prisma.PharmacyScalarFieldEnum = {
@@ -184,7 +186,7 @@ exports.Prisma.PharmacyScalarFieldEnum = {
   dosis: 'dosis',
   tanggalMulaiObat: 'tanggalMulaiObat',
   tanggalSelesaiObat: 'tanggalSelesaiObat',
-  idUser: 'idUser'
+  userId: 'userId'
 };
 
 exports.Prisma.MriTestScalarFieldEnum = {
@@ -192,7 +194,7 @@ exports.Prisma.MriTestScalarFieldEnum = {
   urlPhoto: 'urlPhoto',
   keterangan: 'keterangan',
   tanggal: 'tanggal',
-  idUser: 'idUser'
+  userId: 'userId'
 };
 
 exports.Prisma.UrineTestScalarFieldEnum = {
@@ -202,8 +204,8 @@ exports.Prisma.UrineTestScalarFieldEnum = {
   ph: 'ph',
   glukosa: 'glukosa',
   protein: 'protein',
-  tanggal: 'tanggal',
-  idUser: 'idUser'
+  date: 'date',
+  userId: 'userId'
 };
 
 exports.Prisma.BloodTestScalarFieldEnum = {
@@ -213,8 +215,8 @@ exports.Prisma.BloodTestScalarFieldEnum = {
   trombosit: 'trombosit',
   gulaDarah: 'gulaDarah',
   kolesterol: 'kolesterol',
-  tanggal: 'tanggal',
-  idUser: 'idUser'
+  date: 'date',
+  userId: 'userId'
 };
 
 exports.Prisma.SortOrder = {

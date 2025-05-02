@@ -1,13 +1,11 @@
 "use client"
 import { useAuth } from "@/context/AuthContext";
 import { HistoricalData } from "@/db/prisma";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function HealthcareMonitoringPage() {
   const [historicalData, setHistoricalData] = useState<HistoricalData[]>([]);
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchHistoricalData = async () => {
@@ -18,8 +16,6 @@ export default function HealthcareMonitoringPage() {
         setHistoricalData(data);
       } catch (error) {
         console.error("Gagal mengambil data medical checkup:", error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -37,19 +33,6 @@ export default function HealthcareMonitoringPage() {
       day: 'numeric',
     });
   };
-
-  const vitalSigns = [
-    { name: "Temperature", value: "37.5", unit: "°C" },
-    { name: "Blood Pressure", value: "120/80", unit: "mmHg" },
-    { name: "Heart Rate", value: "78", unit: "BPM" },
-    { name: "SPO2", value: "98", unit: "%" }
-  ];
-
-  if (loading) return (
-    <div className="flex justify-center items-center h-full">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
-    </div>
-  );
 
   return (
     <div className="p-6">
@@ -74,22 +57,6 @@ export default function HealthcareMonitoringPage() {
                 <p><span className="font-medium">Location:</span> {user?.address}</p>
                 <p><span className="font-medium">Profession:</span> {user?.profession}</p>
                 <p><span className="font-medium">Religion:</span> {user?.religion}</p>
-              </div>
-            </div>
-
-            {/* Current Vital Signs */}
-            <div className="flex flex-col w-full border rounded-xl shadow-sm">
-              <div className="h-[50px] flex items-center bg-teal-50 rounded-t-xl">
-                <p className="pl-5 text-xl font-semibold text-teal-800">Current Vital Signs</p>
-              </div>
-              <div className="flex flex-wrap w-full p-5">
-                {vitalSigns.map((sign, index) => (
-                  <div key={index} className="flex-1 flex flex-col items-center justify-center gap-2 py-6 min-w-[150px]">
-                    <p className="text-lg font-medium text-teal-800">{sign.name}</p>
-                    <p className="text-4xl font-bold text-teal-800">{sign.value}</p>
-                    <p className="text-sm">{sign.unit}</p>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
@@ -121,13 +88,6 @@ export default function HealthcareMonitoringPage() {
                 </tbody>
               </table>
             </div>
-          </div>
-
-          {/* Submit Button */}
-          <div className="flex justify-center mt-4">
-            <Link href="/healthcare" className="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition">
-              Kirim
-            </Link>
           </div>
         </div>
       </div>

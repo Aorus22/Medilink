@@ -78,13 +78,11 @@ export default function AppointmentPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="p-6 text-center">
-        <p className="text-lg text-gray-600">Loading appointments...</p>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex justify-center items-center h-full">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
+    </div>
+  );
 
   if (error) {
     return (

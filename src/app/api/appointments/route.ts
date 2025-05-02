@@ -4,8 +4,17 @@ import { PrismaClient } from '@/db/prisma';
 const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest) {
+  const userId = req.headers.get('x-user-id');
+
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const appointments = await prisma.appointment.findMany({
+      where:{
+        userId: parseInt(userId),
+      },
       include: {
         doctor: {
           select: {
