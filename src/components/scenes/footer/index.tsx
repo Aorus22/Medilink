@@ -1,7 +1,7 @@
 const Footer = () => {
   return (
-    <footer className="bg-primary-100">
-      <div className="justify-content mx-auto gap-16 md:flex flex px-16 py-12">
+    <footer className="bg-teal-400">
+      <div className="justify-content mx-auto gap-16 md:flex px-16 pt-12">
         <div className="flex-1 w-full">
           <div className="flex flex-col w-auto">
             <div>
@@ -15,13 +15,6 @@ const Footer = () => {
               (blood pressure measurement), MLX90614 (body temperature measurement), ammd GY-MAX30102 (oxygen saturation and heart rate
               measurement) sensors with ESP32 module for automation in the healthcare sector.
             </p>
-            <p>© MedLink All Rights Reserved.</p>
-            <div className="mt-2 font-bold">
-              Sponsorship
-              <div>
-                <img className="h-12" src={"/assets/dynatech logo.png"}/>
-              </div>
-            </div>
           </div>
 
         </div>
@@ -29,12 +22,20 @@ const Footer = () => {
 
         </div> */}
 
-        <div className="w-64 flex flex-col items-end">
+        <div className="w-64 flex flex-col mb:items-end mb-10">
           <div>
-            <h4 className="font-bold">Contact Us</h4>
-            <p className="my-5 ">Muhammad Akmal Indratma.</p>
+            <h4 className="font-bold mb-5">Contact Us</h4>
+            <p className="mb:my-5 ">Muhammad Akmal Indratma.</p>
             <p>+62 82157749916</p>
           </div>
+        </div>
+
+      </div>
+      <div className="px-16 pb-10">
+        <p>© MedLink All Rights Reserved.</p>
+        <p className="mt-2 font-bold">Sponsorship</p>
+        <div>
+          <img className="h-12" src={"/assets/dynatech logo.png"}/>
         </div>
       </div>
     </footer>

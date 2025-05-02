@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useContext } from "react";
 import { RightbarContext } from '@/context/RightbarContext';
 import GoogleMaps from "@/components/GoogleMaps";
+import { useAuth } from "@/context/AuthContext";
 
 const doctor = "/assets/dashboard/doctor.svg";
 const pharmacy = "/assets/dashboard/pharmacy.svg";
@@ -13,6 +14,7 @@ const monitoring = "/assets/dashboard/monitoring.svg";
 const groupDoctor = "/assets/dashboard/group-doctor.svg";
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const { setRightbarOpen } = useContext(RightbarContext);
 
   return (
@@ -41,9 +43,9 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2">
             <img src="/assets/Team/marko.jpg" alt="User" width={40} height={40} className="rounded-full" />
             <div>
-              <strong>Marko Refianto</strong>
+              <strong>{user?.name}</strong>
               <br />
-              <small>D200 220 069</small>
+              <small>@{user?.username}</small>
             </div>
           </div>
         </div>

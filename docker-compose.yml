@@ -12,5 +12,16 @@ services:
     volumes:
       - medilink-pgdata:/var/lib/postgresql/data
 
+  app:
+    image: aorus22/medilink:latest
+    container_name: medilink-app
+    restart: always
+    environment:
+      DATABASE_URL: "postgresql://medilink_user:medilink_password@postgres:5432/medilinkdb?schema=public"
+    ports:
+      - 3001:3000
+    depends_on:
+      - postgres
+
 volumes:
   medilink-pgdata:

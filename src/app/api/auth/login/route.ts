@@ -48,7 +48,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         message: 'Login successful',
-        user: { id: user.id, username: user.username },
+        user: {
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          birthdate: user.birthdate,
+          religion: user.religion,
+          address: user.address,
+          avatar: user.avatar,
+          profession : user.profession
+        },
         token
       },
       { status: 200 }
@@ -82,7 +91,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       {
         message: 'QR Login successful',
-        user: { id: user.id, username: user.username },
+        user: {
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          birthdate: user.birthdate,
+          religion: user.religion,
+          address: user.address,
+          avatar: user.avatar,
+          profession : user.profession
+        },
         token
       },
       { status: 200 }
