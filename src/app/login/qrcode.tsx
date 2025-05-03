@@ -1,12 +1,9 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
+import { toast } from 'react-toastify';
 
-interface QRCodeLoginProps {
-  onLoginSuccess: (username: string) => void;
-}
-
-export default function QRCodeLogin({ onLoginSuccess }: QRCodeLoginProps) {
+export default function QRCodeLogin() {
   const [result, setResult] = useState('');
   const [error, setError] = useState('');
   const [scanning, setScanning] = useState(true);
@@ -27,12 +24,11 @@ export default function QRCodeLogin({ onLoginSuccess }: QRCodeLoginProps) {
         throw new Error(data.error || 'Failed to login');
       }
 
-      setResult(`Login successful: Welcome ${data.user.username}`);
-      onLoginSuccess(data.user.username);
+      toast.success('Login successful');
+
       return data;
     } catch (err: any) {
-      setError(err.message);
-      console.error('Login error:', err);
+      toast.error(err.message);
       return null;
     }
   };

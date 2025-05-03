@@ -1,13 +1,15 @@
 "use client"
 import { useAuth } from "@/context/AuthContext";
-import { HistoricalData } from "@/db/prisma";
+import { HistoricalData } from "#/prisma/db";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 export default function HealthcareMonitoringPage() {
   const [historicalData, setHistoricalData] = useState<HistoricalData[]>([]);
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [loadingSend, setLoadingSend] = useState(false);
 
   useEffect(() => {
     const fetchHistoricalData = async () => {
@@ -24,7 +26,7 @@ export default function HealthcareMonitoringPage() {
     };
 
     fetchHistoricalData();
-  }, []);
+  }, [loading]);
 
   const formatDate = (date: string | Date) => {
     const parsedDate = new Date(date);
@@ -44,6 +46,39 @@ export default function HealthcareMonitoringPage() {
     { name: "Heart Rate", value: "78", unit: "BPM" },
     { name: "SPO2", value: "98", unit: "%" }
   ];
+
+  const handleSend = async () => {
+    try {
+      setLoadingSend(true);
+      const payload = vitalSigns.map(sign => ({
+        parameter: sign.name,
+        value: sign.value,
+        unit: sign.unit,
+        information: "Normal",
+        date: new Date().toISOString(),
+      }));
+
+      const response = await fetch("/api/medical-checkup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send data");
+      }
+
+      toast.success("Vital signs submitted successfully!");
+    } catch (error) {
+      toast.error("Error sending data");
+    } finally {
+      setLoading(true);
+      setLoadingSend(false);
+    }
+  };
+
 
   if (loading) return (
     <div className="flex justify-center items-center h-full">
@@ -94,6 +129,21 @@ export default function HealthcareMonitoringPage() {
             </div>
           </div>
 
+          {/* Submit Button */}
+          <div className="flex justify-center">
+            <button onClick={handleSend} className="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition">
+              {loadingSend ? (
+                <>
+                <span className="inline-block animate-spin mr-2">⟳</span>
+                Sending...
+                </>
+
+              ) :(
+                <>Send</>
+              )}
+            </button>
+          </div>
+
           {/* Historical Data */}
           <div className="flex flex-col w-full border rounded-xl shadow-sm">
             <div className="h-[50px] flex items-center bg-teal-50 rounded-t-xl">
@@ -121,13 +171,6 @@ export default function HealthcareMonitoringPage() {
                 </tbody>
               </table>
             </div>
-          </div>
-
-          {/* Submit Button */}
-          <div className="flex justify-center mt-4">
-            <Link href="/healthcare" className="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition">
-              Kirim
-            </Link>
           </div>
         </div>
       </div>

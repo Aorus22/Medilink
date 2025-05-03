@@ -2,16 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { DoctorResponse } from "@/app/api/doctors/route";
 const doctor = "/assets/dashboard/doctor.svg";
 
-interface Doctor {
-  id: string;
-  name: string;
-  specialist: string;
-}
-
 const DoctorsPage: React.FC = () => {
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [doctors, setDoctors] = useState<DoctorResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,12 +19,7 @@ const DoctorsPage: React.FC = () => {
           throw new Error('Failed to fetch doctors');
         }
         const data = await response.json();
-        const doctorsData = data.map((doctor: any) => ({
-          id: doctor.id,
-          name: doctor.name,
-          specialist: doctor.specialist,
-        }));
-        setDoctors(doctorsData);
+        setDoctors(data);
       } catch (err) {
         setError('Failed to load doctors');
       } finally {

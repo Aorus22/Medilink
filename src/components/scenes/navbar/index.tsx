@@ -7,8 +7,8 @@ import NextLink from "next/link";
 import CustomLink from "./Link";
 import { SelectedPage } from "@/utils/types";
 import useMediaQuery from "@/hooks/useMediaQuery";
-import ActionButton from "@/components/ActionButton";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/context/AuthContext";
 
 type Props = {
   isTopOfPage: boolean;
@@ -17,6 +17,7 @@ type Props = {
 };
 
 const Navbar = ({ isTopOfPage, selectedPage, setSelectedPage }: Props) => {
+  const { user, logout } = useAuth();
   const [isMenuToggled, setIsMenuToggled] = useState<boolean>(false);
   const flexBetween = "flex items-center justify-between";
   const isAboveMediumScreens = useMediaQuery("(min-width: 1060px)");
@@ -63,14 +64,20 @@ const Navbar = ({ isTopOfPage, selectedPage, setSelectedPage }: Props) => {
                       Diagnose Now
                     </p>
                   </NextLink> */}
-                  <NextLink href="/dashboard" passHref>
+                  <a href="/dashboard">
                     <p className="hover:text-teal-600 hover:underline cursor-pointer">
                       Dashboard
                     </p>
-                  </NextLink>
-                  <ActionButton setSelectedPage={setSelectedPage}>
-                    Logout
-                  </ActionButton>
+                  </a>
+                  {user ? (
+                    <button onClick={logout} className="rounded-md bg-secondary-500 px-10 py-2 hover:bg-yellow-300 hover:text-white transition duration-300">
+                      Logout
+                    </button>
+                  ) : (
+                    <NextLink href={"/login"} className="rounded-md bg-secondary-500 px-10 py-2 hover:bg-yellow-300 hover:text-white transition duration-300">
+                      Login
+                    </NextLink>
+                  )}
                 </div>
               </div>
             ) : (
@@ -94,14 +101,14 @@ const Navbar = ({ isTopOfPage, selectedPage, setSelectedPage }: Props) => {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ duration: 0.3 }}
-            className="fixed right-0 top-0 z-40 h-full w-[300px] bg-primary-100 drop-shadow-xl"
+            className="fixed right-0 top-0 z-40 h-full w-[300px] bg-teal-400 drop-shadow-xl"
           >
             <div className="flex justify-end p-6">
               <button onClick={() => setIsMenuToggled(false)}>
                 <XMarkIcon className="h-6 w-6 text-gray-600" />
               </button>
             </div>
-            <div className="ml-10 mt-10 flex flex-col gap-8 text-lg font-semibold">
+            <div className="mx-10 mt-10 flex flex-col gap-8 text-lg font-semibold">
               {["Home", "About", "Services", "Team"].map((page) => (
                 <CustomLink
                   key={page}
@@ -114,14 +121,23 @@ const Navbar = ({ isTopOfPage, selectedPage, setSelectedPage }: Props) => {
                   isTopOfPage={isTopOfPage}
                 />
               ))}
-              <NextLink href="/dashboard" passHref>
+              <a href="/dashboard">
                 <p
                   onClick={() => setIsMenuToggled(false)}
                   className="hover:text-teal-600 underline cursor-pointer"
                 >
                   Dashboard
                 </p>
-              </NextLink>
+              </a>
+              {user ? (
+                <button onClick={logout} className="rounded-md bg-secondary-500 px-10 py-2 hover:bg-yellow-300 hover:text-white transition duration-300">
+                  Logout
+                </button>
+              ) : (
+                <NextLink href={"/login"} className="rounded-md bg-secondary-500 px-10 py-2 hover:bg-yellow-300 hover:text-white transition duration-300">
+                  Login
+                </NextLink>
+              )}
             </div>
           </motion.div>
         )}

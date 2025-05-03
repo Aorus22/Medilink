@@ -1,7 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@/db/prisma';
+import { PrismaClient } from '#/prisma/db';
 
 const prisma = new PrismaClient();
+
+export interface DoctorPracticeHours {
+  id: number;
+  startTime: string;
+  endTime: string;
+  dayOfWeek: string;
+  doctorId: number;
+}
+
+export interface DoctorDetailsResponse {
+  id: number;
+  name: string;
+  specialist: string;
+  education: string;
+  experience: string;
+  about: string;
+  practiceHours: DoctorPracticeHours[];
+}
 
 export async function GET(req: NextRequest, { params }: any) {
   try {

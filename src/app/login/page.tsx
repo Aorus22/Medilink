@@ -6,7 +6,6 @@ import PasswordLogin from './password';
 
 export default function LoginPage() {
   const [activeTab, setActiveTab] = useState<'password' | 'qrcode'>('password');
-  const [loginStatus, setLoginStatus] = useState<{ message: string; error: boolean } | null>(null);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-teal-100 p-4">
@@ -50,15 +49,10 @@ export default function LoginPage() {
 
         {/* Content */}
         {activeTab === 'password' ? (
-            <PasswordLogin onLoginSuccess={(username) =>
-              setLoginStatus({ message: `Login successful: Welcome ${username}`, error: false })
-            } />
+            <PasswordLogin />
         ) : (
-          <QRCodeLogin
-            onLoginSuccess={(username) => {
-              setLoginStatus({ message: `Login successful: Welcome ${username}`, error: false });
-            }}
-          />
+          // <QRCodeLogin />
+          <div>QRCode</div>
         )}
 
         {/* Footer */}

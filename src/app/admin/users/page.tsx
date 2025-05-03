@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
-import { User } from '@/db/prisma';
+import { User } from '#/prisma/db';
 
 export default function AdminUsersPage() {
   const [searchTerm, setSearchTerm] = useState('');

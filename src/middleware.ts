@@ -12,7 +12,7 @@ async function verifyJWT(token: string) {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  if (['/', '/login', '/register'].includes(pathname)) {
+  if (['/', '/login', '/register', 'api/auth/login', 'api/auth/register', 'api/auth/me'].includes(pathname)) {
     return NextResponse.next();
   }
 

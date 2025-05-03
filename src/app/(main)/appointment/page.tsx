@@ -1,50 +1,24 @@
 "use client"
 
+import { AppointmentResponse } from "@/app/api/appointments/route";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
-interface Appointment {
-  id: number;
-  doctorName: string;
-  doctorSpecialty: string;
-  date: string;
-  time: string;
-  purpose: string;
-  status: string;
-  location: string;
-  notes: string;
-}
-
 export default function AppointmentPage() {
   const [appointmentFilter, setAppointmentFilter] = useState("upcoming");
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [appointments, setAppointments] = useState<AppointmentResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchAppointments() {
       try {
-        const response = await fetch('/api/appointments?id=1');
+        const response = await fetch('/api/appointments');
         if (!response.ok) {
           throw new Error('Failed to fetch appointments');
         }
         const data = await response.json();
-        const formattedAppointments: Appointment[] = data.map((appt: any) => ({
-          id: appt.id,
-          doctorName: appt.doctor.name,
-          doctorSpecialty: appt.doctor.specialist,
-          date: new Date(appt.date).toISOString().split('T')[0],
-          time: new Date(appt.date).toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true,
-          }),
-          purpose: appt.purpose,
-          status: appt.status,
-          location: appt.doctor.location,
-          notes: appt.information,
-        }));
-        setAppointments(formattedAppointments);
+        setAppointments(data);
         setLoading(false);
       } catch (err: any) {
         setError(err.message);
@@ -101,7 +75,7 @@ export default function AppointmentPage() {
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div className="flex flex-wrap gap-2">
-          <button 
+          <button
             className={`px-4 py-2 rounded-lg ${appointmentFilter === "upcoming" ? "bg-teal-600 text-white" : "bg-gray-100 hover:bg-teal-100"}`}
             onClick={() => setAppointmentFilter("upcoming")}
           >
@@ -129,69 +103,87 @@ export default function AppointmentPage() {
         </Link>
       </div>
 
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        {filteredAppointments.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-teal-50">
-                  <th className="px-6 py-3 text-left text-sm font-medium text-teal-700">Doctor</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-teal-700">Date & Time</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-teal-700">Purpose</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-teal-700">Location</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-teal-700">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredAppointments.map((appointment) => (
-                  <tr key={appointment.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600">
-                          <i className="bi bi-person-badge"></i>
-                        </div>
-                        <div className="ml-3">
-                          <div className="text-sm font-medium text-gray-900">{appointment.doctorName}</div>
-                          <div className="text-sm text-gray-500">{appointment.doctorSpecialty}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{new Date(appointment.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</div>
-                      <div className="text-sm text-gray-500">{appointment.time}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{appointment.purpose}</div>
-                      {appointment.notes && (
-                        <div className="text-xs text-gray-500 mt-1">{appointment.notes}</div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {appointment.location}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs rounded-full ${getStatusClass(appointment.status)}`}>
-                        {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <div className="mx-auto w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center mb-4">
-              <i className="bi bi-calendar-x text-teal-600 text-2xl"></i>
+      {filteredAppointments.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredAppointments.map((appointment) => (
+            <div key={appointment.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow relative">
+              {/* Date and Queue Number */}
+              <div className="bg-teal-600 text-white p-2 flex justify-between items-center">
+                <div className="flex items-center">
+                  <i className="bi bi-calendar-date mr-2"></i>
+                  <span>{new Date(appointment.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                </div>
+                <div className="flex items-center font-bold">
+                  <i className="bi bi-person-lines-fill mr-1"></i>
+                  <span>Queue #{appointment.queue}</span>
+                </div>
+              </div>
+
+              <div className="border-b border-gray-100 p-4">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600">
+                    <i className="bi bi-person-badge"></i>
+                  </div>
+                  <div className="ml-3">
+                    <div className="text-lg font-medium text-gray-900">{appointment.doctorName}</div>
+                    <div className="text-sm text-gray-500">{appointment.doctorSpecialty}</div>
+                  </div>
+                  <div className="ml-auto">
+                    <span className={`px-2 py-1 text-xs rounded-full ${getStatusClass(appointment.status)}`}>
+                      {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4">
+                <div className="flex items-start mb-3">
+                  <div className="flex-shrink-0 w-5 text-teal-500">
+                    <i className="bi bi-clipboard-plus"></i>
+                  </div>
+                  <div className="ml-3">
+                    <div className="text-sm font-medium text-gray-900">Purpose</div>
+                    <div className="text-sm text-gray-700">{appointment.purpose}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-start mb-3">
+                  <div className="flex-shrink-0 w-5 text-teal-500">
+                    <i className="bi bi-geo-alt"></i>
+                  </div>
+                  <div className="ml-3">
+                    <div className="text-sm font-medium text-gray-900">Location</div>
+                    <div className="text-sm text-gray-700">{appointment.location}</div>
+                  </div>
+                </div>
+
+                {appointment.notes && (
+                  <div className="flex items-start mt-3">
+                    <div className="flex-shrink-0 w-5 text-teal-500">
+                      <i className="bi bi-journal-text"></i>
+                    </div>
+                    <div className="ml-3">
+                      <div className="text-sm font-medium text-gray-900">Notes</div>
+                      <div className="text-sm text-gray-700">{appointment.notes}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No appointments found</h3>
-            <p className="text-gray-500 mb-6">There are no {appointmentFilter} appointments to display</p>
-            <Link href="/doctors" className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition">
-              Schedule an Appointment
-            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-md text-center py-12">
+          <div className="mx-auto w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center mb-4">
+            <i className="bi bi-calendar-x text-teal-600 text-2xl"></i>
           </div>
-        )}
-      </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No appointments found</h3>
+          <p className="text-gray-500 mb-6">There are no {appointmentFilter} appointments to display</p>
+          <Link href="/doctors" className="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition">
+            Schedule an Appointment
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@/db/prisma';
+import { PrismaClient } from '#/prisma/db';
 
 const prisma = new PrismaClient();
+
+export interface AllMessageDoctorResponse {
+  doctorId: number;
+  doctorName: string;
+  doctorSpecialty: string;
+  avatar: string | null;
+  lastMessage: string;
+  lastMessageTime: string;
+}
 
 export async function GET(req: NextRequest) {
   const userId = req.headers.get('x-user-id');
@@ -40,8 +49,8 @@ export async function GET(req: NextRequest) {
 
     lastMessages.push({
       doctorId: msg.doctorId,
-      name: msg.doctor?.name,
-      specialty: msg.doctor?.specialist,
+      doctorName: msg.doctor?.name,
+      doctorSpecialty: msg.doctor?.specialist,
       avatar: "",
       lastMessage: msg.content,
       lastMessageTime: msg.time,

@@ -2,21 +2,19 @@
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'react-toastify';
 
-interface PasswordLoginProps {
-  onLoginSuccess: (username: string) => void;
-}
-
-export default function PasswordLogin({ onLoginSuccess }: PasswordLoginProps) {
+export default function PasswordLogin() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [loginStatus, setLoginStatus] = useState<{ message: string; error: boolean } | null>(null);
+  const [loading, setLoading] = useState(false);
   const { setAuthData } = useAuth();
   const router = useRouter();
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      setLoading(true);
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -26,16 +24,17 @@ export default function PasswordLogin({ onLoginSuccess }: PasswordLoginProps) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Login failed');
 
-      setLoginStatus({ message: `Login successful: Welcome ${data.user.username}`, error: false });
+      toast.success('Login successful');
       setAuthData({
         user: data.user,
         token: data.token,
       });
       router.push('/dashboard')
-      onLoginSuccess(data.user.username);
     } catch (err: any) {
-      setLoginStatus({ message: err.message, error: true });
+      toast.error(err.message);
       console.error('Login error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -94,18 +93,16 @@ export default function PasswordLogin({ onLoginSuccess }: PasswordLoginProps) {
         type="submit"
         className="w-full bg-gradient-to-r from-teal-500 to-teal-700 text-white py-2 px-4 rounded-lg font-bold hover:opacity-90 transition"
       >
-        Login
-      </button>
+        {loading ? (
+          <>
+          <span className="inline-block animate-spin mr-2">⟳</span>
+          Logging in...
+          </>
 
-      {loginStatus && (
-        <div
-          className={`mt-4 p-3 rounded-lg ${
-            loginStatus.error ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-          }`}
-        >
-          {loginStatus.message}
-        </div>
-      )}
+        ) :(
+          <>Login</>
+        )}
+      </button>
     </form>
   );
 }

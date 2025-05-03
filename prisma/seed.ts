@@ -1,6 +1,6 @@
-import { Doctor } from "@/db/prisma";
+import { Doctor } from "./db";
 
-const { PrismaClient } = require('../src/db/prisma');
+const { PrismaClient } = require('./db');
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
 
@@ -186,14 +186,18 @@ async function main() {
     data: [
       {
         date: new Date("2024-04-15T10:00:00"),
+        confirmTime: new Date("2024-04-14T10:00:00"),
+        status: "confirmed",
+        queueNum: 1,
         purpose: "Initial cardiac consultation",
         information: "Patient reported occasional chest pain and shortness of breath.",
-        status: "confirmed",
         userId: user.id,
         doctorId: doctor1.id,
       },
       {
-        date: new Date("2024-04-22T14:00:00"),
+        date: new Date("2024-04-14T10:00:00"),
+        confirmTime: new Date("2024-04-14T14:00:00"),
+        queueNum: 1,
         purpose: "Follow-up appointment",
         information: "Review of initial medication and symptoms progress.",
         status: "confirmed",
@@ -201,7 +205,9 @@ async function main() {
         doctorId: doctor1.id,
       },
       {
-        date: new Date("2025-05-01T11:00:00"),
+        date: new Date("2024-04-13T10:00:00"),
+        confirmTime: new Date("2024-04-14T14:00:00"),
+        queueNum: 1,
         purpose: "Routine check-up",
         information: "Patient has been experiencing chest pain occasionally.",
         status: "confirmed",
@@ -209,7 +215,9 @@ async function main() {
         doctorId: doctor1.id,
       },
       {
-        date: new Date("2025-07-15T10:00:00"),
+        date: new Date("2025-04-14T10:00:00"),
+        confirmTime: new Date("2025-07-15T10:00:00"),
+        queueNum: 1,
         purpose: "Initial cardiac consultation",
         information: "Patient reported occasional chest pain and shortness of breath.",
         status: "confirmed",
@@ -274,19 +282,19 @@ async function main() {
     {
       startTime: "08:00",
       endTime: "12:00",
-      dayOfWeek: "Senin",
+      dayOfWeek: "Monday",
       doctorId: doctor.id,
     },
     {
       startTime: "13:00",
       endTime: "17:00",
-      dayOfWeek: "Rabu",
+      dayOfWeek: "Wednesday",
       doctorId: doctor.id,
     },
     {
       startTime: "09:00",
       endTime: "14:00",
-      dayOfWeek: "Jumat",
+      dayOfWeek: "Friday",
       doctorId: doctor.id,
     },
   ]);

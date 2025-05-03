@@ -1,6 +1,6 @@
 "use client"
 import { useAuth } from "@/context/AuthContext";
-import { HistoricalData } from "@/db/prisma";
+import { HistoricalData } from "#/prisma/db";
 import { useEffect, useState } from "react";
 
 export default function HealthcareMonitoringPage() {

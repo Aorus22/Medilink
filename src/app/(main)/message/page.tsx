@@ -2,19 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-
-interface AllMessageResponse {
-  doctorId: number;
-  name: string;
-  specialty: string;
-  avatar: string | null;
-  lastMessage: string;
-  lastMessageTime: string;
-}
+import { AllMessageDoctorResponse } from "@/app/api/message/route";
 
 export default function MessageListPage() {
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [doctors, setDoctors] = useState<AllMessageResponse[]>([]);
+  const [allMessage, setAllMessage] = useState<AllMessageDoctorResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -22,7 +14,7 @@ export default function MessageListPage() {
       try {
         const res = await fetch("/api/message");
         const data = await res.json();
-        setDoctors(data);
+        setAllMessage(data);
       } catch (error) {
         console.error("Failed to fetch messages:", error);
       } finally {
@@ -33,9 +25,9 @@ export default function MessageListPage() {
     fetchMessages();
   }, []);
 
-  const filteredDoctors = doctors.filter((doctor) =>
-    doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredMessage = allMessage.filter((message) =>
+    message.doctorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    message.doctorSpecialty.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getInitials = (name: string) => {
@@ -82,32 +74,32 @@ export default function MessageListPage() {
           <div className="flex justify-center items-center h-full">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
           </div>
-        ) : filteredDoctors.length > 0 ? (
-          filteredDoctors.map((doctor) => (
+        ) : filteredMessage.length > 0 ? (
+          filteredMessage.map((message) => (
             <Link
-              href={`/message/${doctor.doctorId}`}
-              key={doctor.doctorId}
+              href={`/message/${message.doctorId}`}
+              key={message.doctorId}
               className="block"
             >
               <div className="p-4 border-b border-gray-200 flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition">
                 <div className="relative">
-                  {doctor.avatar ? (
-                    <img src={doctor.avatar} alt={doctor.name} className="w-14 h-14 rounded-full" />
+                  {message.avatar ? (
+                    <img src={message.avatar} alt={message.doctorName} className="w-14 h-14 rounded-full" />
                   ) : (
                     <div className="w-14 h-14 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 font-bold text-lg">
-                      {getInitials(doctor.name)}
+                      {getInitials(message.doctorName)}
                     </div>
                   )}
                 </div>
                 <div className="flex-grow min-w-0">
                   <div className="flex justify-between items-start">
-                    <h3 className="font-medium truncate">{doctor.name}</h3>
+                    <h3 className="font-medium truncate">{message.doctorName}</h3>
                     <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
-                      {new Date(doctor.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(message.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 truncate">{doctor.lastMessage}</p>
-                  <p className="text-xs text-teal-600">{doctor.specialty}</p>
+                  <p className="text-sm text-gray-600 truncate">{message.lastMessage}</p>
+                  <p className="text-xs text-teal-600">{message.doctorSpecialty}</p>
                 </div>
                 <i className="bi bi-chevron-right text-gray-400"></i>
               </div>
