@@ -1,3 +1,7 @@
-module.exports = {
-  allowedDevOrigins: ['http://192.168.1.7'],
+import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
+  output: 'standalone',
 };
+
+export default nextConfig;
