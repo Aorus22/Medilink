@@ -12,10 +12,41 @@ async function verifyJWT(token: string) {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  if (['/', '/login', '/register', 'api/auth/login', 'api/auth/register', 'api/auth/me'].includes(pathname)) {
+  // Allow public routes
+  if (['/', '/login', '/register', '/api/auth/login', '/api/auth/register', '/api/auth/me'].includes(pathname)) {
     return NextResponse.next();
   }
 
+  // Allow all API routes for authenticated users
+  if (pathname.startsWith('/api/')) {
+    try {
+      const token = req.cookies.get('auth_token')?.value;
+
+      if (!token) {
+        return NextResponse.redirect(new URL('/login', req.url));
+      }
+
+      const decoded = await verifyJWT(token);
+
+      const response = NextResponse.next();
+      if (decoded.userId) {
+        response.headers.set('x-user-id', decoded.userId.toString());
+      }
+      if (decoded.username) {
+        response.headers.set('x-username', decoded.username as string);
+      }
+      if (decoded.role) {
+        response.headers.set('x-user-role', decoded.role as string);
+      }
+
+      return response;
+    } catch (error) {
+      console.error('JWT verification failed:', error);
+      return NextResponse.redirect(new URL('/login', req.url));
+    }
+  }
+
+  // Handle non-API routes
   try {
     const token = req.cookies.get('auth_token')?.value;
 
@@ -25,12 +56,25 @@ export async function middleware(req: NextRequest) {
 
     const decoded = await verifyJWT(token);
 
+    // Restrict ADMIN to /admin/* only
+    if (decoded.role === 'ADMIN' && !pathname.startsWith('/admin/')) {
+      return NextResponse.redirect(new URL('/admin/dashboard', req.url));
+    }
+
+    // Restrict USER from accessing /admin/*
+    if (decoded.role === 'USER' && pathname.startsWith('/admin/')) {
+      return NextResponse.redirect(new URL('/dashboard', req.url));
+    }
+
     const response = NextResponse.next();
     if (decoded.userId) {
       response.headers.set('x-user-id', decoded.userId.toString());
     }
     if (decoded.username) {
       response.headers.set('x-username', decoded.username as string);
+    }
+    if (decoded.role) {
+      response.headers.set('x-user-role', decoded.role as string);
     }
 
     return response;
@@ -52,5 +96,6 @@ export const config = {
     '/message/:path*',
     '/pharmacy/:path*',
     '/api/((?!auth).*)',
+    '/admin/:path*',
   ],
 };

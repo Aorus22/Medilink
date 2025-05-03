@@ -7,9 +7,11 @@ import { cookies } from 'next/headers';
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
 
-const setAuthCookie = async (user: { id: number; username: string }) => {
+type Role = 'USER' | 'ADMIN';
+
+const setAuthCookie = async (user: { id: number; username: string }, role: Role) => {
   const token = jwt.sign(
-    { userId: user.id, username: user.username },
+    { userId: user.id, username: user.username, role },
     JWT_SECRET,
     { expiresIn: '1h' }
   );
@@ -30,6 +32,32 @@ export async function POST(req: NextRequest) {
   try {
     const { username, password } = await req.json();
 
+    // Special admin login
+    if (username === 'admin' && password === 'admin') {
+      const adminUser = {
+        id: 999999, // Special ID for hardcoded admin
+        username: 'admin',
+        name: 'Administrator',
+        role: 'ADMIN',
+        birthdate: null,
+        religion: null,
+        address: null,
+        avatar: null,
+        profession: null,
+      };
+
+      const token = await setAuthCookie(adminUser, 'ADMIN');
+      return NextResponse.json(
+        {
+          message: 'Admin login successful',
+          user: adminUser,
+          token,
+        },
+        { status: 200 }
+      );
+    }
+
+    // Regular user login
     const user = await prisma.user.findUnique({
       where: { username },
     });
@@ -43,7 +71,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
     }
 
-    const token = await setAuthCookie(user);
+    const token = await setAuthCookie(user, 'USER');
 
     return NextResponse.json(
       {
@@ -56,9 +84,10 @@ export async function POST(req: NextRequest) {
           religion: user.religion,
           address: user.address,
           avatar: user.avatar,
-          profession : user.profession
+          profession: user.profession,
+          role: 'USER',
         },
-        token
+        token,
       },
       { status: 200 }
     );
@@ -78,7 +107,7 @@ export async function GET(req: NextRequest) {
 
     const user = await prisma.user.findFirst({
       where: {
-        password: hashedPassword
+        password: hashedPassword,
       },
     });
 
@@ -86,7 +115,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid QR code' }, { status: 404 });
     }
 
-    const token = await setAuthCookie(user);
+    const role = user.username === 'admin' ? 'ADMIN' : 'USER';
+    const token = await setAuthCookie(user, role);
 
     return NextResponse.json(
       {
@@ -99,9 +129,10 @@ export async function GET(req: NextRequest) {
           religion: user.religion,
           address: user.address,
           avatar: user.avatar,
-          profession : user.profession
+          profession: user.profession,
+          role,
         },
-        token
+        token,
       },
       { status: 200 }
     );

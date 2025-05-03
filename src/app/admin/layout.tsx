@@ -4,10 +4,13 @@ import { ReactNode, useState } from 'react';
 import Link from 'next/link';
 import { RightbarContext } from '@/context/RightbarContext';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 const logo = '/assets/Logo/medlink.png';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+
+  const { logout } = useAuth();
 
   return (
       <div className="flex h-screen text-black">
@@ -20,14 +23,24 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               </Link>
             </div>
             <nav className="flex flex-col">
-              <SidebarLink href="/dashboard" icon="bi-house-door" text="Dashboard" />
+              <SidebarLink href="/admin/dashboard" icon="bi-house-door" text="Dashboard" />
               <SidebarLink href="/admin/users" icon="bi-clipboard-check-fill" text="Users" />
+              <SidebarLink href="/admin/medical-checkup" icon="bi-gear-wide" text="Medical Checkup"/>
+              <SidebarLink href="/admin/doctors" icon="bi-person-standing" text="Doctors"/>
+              <SidebarLink href="/admin/appointments" icon="bi-clipboard-check-fill" text="Appointments" />
+              <SidebarLink href="/admin/message" icon="bi-chat-left-dots" text="Message"/>
             </nav>
           </div>
 
           <div className="flex flex-col gap-2">
             <SidebarLink href="/account" icon="bi-person-fill" text="My Account" />
-            <SidebarLink href="/logout" icon="bi-box-arrow-right" text="Sign Out" />
+            <button
+              onClick={logout}
+              className="flex items-center gap-2 p-2 mb-2 rounded-lg text-gray-500 hover:bg-teal-500 hover:text-white transition w-full text-left"
+            >
+              <i className="bi bi-box-arrow-right"></i>
+              <span>Sign Out</span>
+            </button>
             <SidebarLink href="/help" icon="bi-question-circle-fill" text="Help" />
           </div>
         </aside>

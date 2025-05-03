@@ -5,10 +5,10 @@ const prisma = new PrismaClient();
 
 export interface AppointmentResponse {
   id: number;
+  userName: string,
   doctorName: string;
   doctorSpecialty: string;
-  date: string;
-  time: string;
+  date: Date;
   purpose: string;
   status: string;
   location: string;
@@ -18,41 +18,66 @@ export interface AppointmentResponse {
 
 export async function GET(req: NextRequest) {
   const userId = req.headers.get('x-user-id');
+  const userRole = req.headers.get('x-user-role');
 
   if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    const appointments = await prisma.appointment.findMany({
-      where:{
-        userId: parseInt(userId),
-      },
-      include: {
-        doctor: {
-          select: {
-            id: true,
-            name: true,
-            specialist: true,
-            about: true,
-            education: true,
-            experience: true,
-            location: true,
+    const queryOptions = userRole === 'ADMIN'
+      ? {
+          include: {
+            doctor: {
+              select: {
+                id: true,
+                name: true,
+                specialist: true,
+                about: true,
+                education: true,
+                experience: true,
+                location: true,
+              },
+            },
+            user: {
+              select: {
+                name: true,
+              }
+            }
           },
-        },
-      },
-    });
+        }
+      : {
+          where: {
+            userId: parseInt(userId),
+          },
+          include: {
+            doctor: {
+              select: {
+                id: true,
+                name: true,
+                specialist: true,
+                about: true,
+                education: true,
+                experience: true,
+                location: true,
+              },
+            },
+            user: {
+              select: {
+                name: true,
+              }
+            }
+          },
+        };
+
+    const appointments = await prisma.appointment.findMany(queryOptions as any);
 
     const formattedAppointments: AppointmentResponse[] = appointments.map((appt: any) => ({
       id: appt.id,
+      userName: appt.user.name,
       doctorName: appt.doctor.name,
       doctorSpecialty: appt.doctor.specialist,
-      date: new Date(appt.date).toISOString().split('T')[0],
-      time: new Date(appt.date).toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-      }),
+      date: new Date(appt.date),
       purpose: appt.purpose,
       status: appt.status,
       location: appt.doctor.location,
@@ -68,4 +93,3 @@ export async function GET(req: NextRequest) {
     await prisma.$disconnect();
   }
 }
-

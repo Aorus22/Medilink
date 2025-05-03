@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: medilink_user
       POSTGRES_PASSWORD: medilink_password
     ports:
-      - 5432:5432
+      - 7480:5432
     volumes:
       - medilink-pgdata:/var/lib/postgresql/data
 
@@ -19,7 +19,7 @@ services:
     environment:
       DATABASE_URL: "postgresql://medilink_user:medilink_password@postgres:5432/medilinkdb?schema=public"
     ports:
-      - 3001:3000
+      - 7672:3000
     depends_on:
       - postgres
 

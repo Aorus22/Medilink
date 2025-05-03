@@ -2,17 +2,27 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AllMessageDoctorResponse } from "@/app/api/message/route";
+import { AllMessageDoctorResponse } from "@/app/api/message/doctor/route";
 
 export default function MessageListPage() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [allMessage, setAllMessage] = useState<AllMessageDoctorResponse[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  const [showDoctorList, setShowDoctorList] = useState(false);
+  const [doctors, setDoctors] = useState<{ id: number; name: string; specialist: string }[]>([]);
+  const [loadingDoctors, setLoadingDoctors] = useState(false);
+  const [doctorSearchTerm, setDoctorSearchTerm] = useState("");
+
+  const filteredDoctors = doctors.filter((doctor) =>
+    doctor.name.toLowerCase().includes(doctorSearchTerm.toLowerCase()) ||
+    doctor.specialist.toLowerCase().includes(doctorSearchTerm.toLowerCase())
+  );
+
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await fetch("/api/message");
+        const res = await fetch("/api/message/doctor");
         const data = await res.json();
         setAllMessage(data);
       } catch (error) {
@@ -24,6 +34,19 @@ export default function MessageListPage() {
 
     fetchMessages();
   }, []);
+
+  const fetchDoctors = async () => {
+    setLoadingDoctors(true);
+    try {
+      const res = await fetch("/api/doctors");
+      const data = await res.json();
+      setDoctors(data);
+    } catch (error) {
+      console.error("Failed to fetch doctors:", error);
+    } finally {
+      setLoadingDoctors(false);
+    }
+  };
 
   const filteredMessage = allMessage.filter((message) =>
     message.doctorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -39,7 +62,7 @@ export default function MessageListPage() {
   };
 
   return (
-    <main className="flex-grow p-5 overflow-y-auto">
+    <main className="flex-grow p-5 overflow-y-auto h-full relative">
       {/* Header */}
       <div className="flex justify-between items-center mb-5">
         <h2 className="text-2xl font-semibold">Messages</h2>
@@ -71,7 +94,7 @@ export default function MessageListPage() {
       {/* Messages list */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         {loading ? (
-          <div className="flex justify-center items-center h-full">
+          <div className="flex justify-center items-center h-32">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
           </div>
         ) : filteredMessage.length > 0 ? (
@@ -117,11 +140,71 @@ export default function MessageListPage() {
       </div>
 
       {/* Floating action button */}
-      <div className="fixed bottom-6 right-6">
-        <button className="w-14 h-14 rounded-full bg-gradient-to-r from-teal-500 to-teal-700 text-white shadow-lg flex items-center justify-center hover:opacity-90 transition">
+      <div className="absolute bottom-6 right-6 z-40">
+        <button
+          onClick={() => {
+            setShowDoctorList(true);
+            fetchDoctors();
+          }}
+          className="w-14 h-14 rounded-full bg-gradient-to-r from-teal-500 to-teal-700 text-white shadow-lg flex items-center justify-center hover:opacity-90 transition"
+        >
           <i className="bi bi-plus-lg text-2xl"></i>
         </button>
       </div>
+
+      {/* Modal for new conversation */}
+      {showDoctorList && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="text-lg font-semibold">Start New Conversation</h3>
+              <button
+                onClick={() => setShowDoctorList(false)}
+                className="text-gray-500 hover:text-gray-700 transition"
+              >
+                <i className="bi bi-x-lg text-lg"></i>
+              </button>
+            </div>
+            <div className="max-h-96 overflow-y-auto">
+              <div className="sticky top-0 z-10 bg-white p-4 border-b">
+                <div className="relative">
+                  <i className="bi bi-search absolute top-1/2 left-3 -translate-y-1/2 text-teal-500 text-sm"></i>
+                  <input
+                    type="text"
+                    placeholder="Search doctors or specialties..."
+                    value={doctorSearchTerm}
+                    onChange={(e) => setDoctorSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-teal-500 transition"
+                  />
+                </div>
+              </div>
+              {loadingDoctors ? (
+                <div className="flex justify-center items-center h-32">
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-teal-500"></div>
+                </div>
+              ) : doctors.length > 0 ? (
+                filteredDoctors.map((doctor) => (
+                  <Link
+                    href={`/message/${doctor.id}`}
+                    key={doctor.id}
+                    onClick={() => setShowDoctorList(false)}
+                    className="block"
+                  >
+                    <div className="p-4 border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer">
+                      <h4 className="font-medium text-gray-800">{doctor.name}</h4>
+                      <p className="text-sm text-teal-600">{doctor.specialist}</p>
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <div className="p-6 text-center text-gray-500">
+                  <p>No doctors available</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

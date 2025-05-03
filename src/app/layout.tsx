@@ -6,6 +6,9 @@ import { ToastContainer } from 'react-toastify';
 export const metadata: Metadata = {
   title: "Medlink Smart",
   description: "Our Product offers an efficiency that brings together various healtcare services, such as medical records, doctor consultations, medication ordering and treatment reminder.",
+  icons: {
+    icon: "/favicons.ico",
+  },
 };
 
 export default function RootLayout({

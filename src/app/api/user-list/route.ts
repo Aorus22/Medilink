@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '#/prisma/db';
+import { PrismaClient, User } from '#/prisma/db';
 
 const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest) {
+
   const userRole = req.headers.get('x-user-role');
 
   if (userRole !== 'ADMIN') {
@@ -12,7 +13,14 @@ export async function GET(req: NextRequest) {
 
   try {
     const users = await prisma.user.findMany();
-    return NextResponse.json(users, { status: 200 });
+
+    const formattedUser = users.map((user: User) => ({
+      id: user.id,
+      name: user.name,
+      username: user.username,
+    }));
+
+    return NextResponse.json(formattedUser, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch doctors' }, { status: 500 });
   }

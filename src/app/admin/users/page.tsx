@@ -12,6 +12,9 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 6;
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -32,15 +35,25 @@ export default function AdminUsersPage() {
     fetchUsers();
   }, []);
 
-  const professions = [...new Set(users.map(user => user.profession))];
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterProfession]);
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.username.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesProfession = filterProfession === '' || user.profession === filterProfession;
-    return matchesSearch && matchesProfession;
-  });
+  // const professions = [...new Set(users.map(user => user.profession))];
+
+  // const filteredUsers = users.filter(user => {
+  //   const matchesSearch =
+  //     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     user.username.toLowerCase().includes(searchTerm.toLowerCase());
+  //   const matchesProfession = filterProfession === '' || user.profession === filterProfession;
+  //   return matchesSearch && matchesProfession;
+  // });
+
+  const totalPages = Math.ceil(users.length / usersPerPage);
+  const paginatedUsers = users.slice(
+    (currentPage - 1) * usersPerPage,
+    currentPage * usersPerPage
+  );
 
   const formatDate = (date: string | Date) => {
     const parsedDate = new Date(date);
@@ -110,7 +123,6 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Page Title and Actions */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
         <div className="flex items-center gap-3">
@@ -121,41 +133,7 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Filters and View Toggle */}
-      <div className="flex flex-wrap justify-between items-center bg-white p-4 rounded-xl shadow-sm mb-6">
-        <div className="flex items-center gap-4">
-          <div>
-            <label htmlFor="profession-filter" className="block text-sm font-medium text-gray-700 mb-1">
-              Profession
-            </label>
-            <select
-              id="profession-filter"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5"
-              value={filterProfession}
-              onChange={(e) => setFilterProfession(e.target.value)}
-            >
-              <option value="">All Professions</option>
-              {professions.map((profession, index) => (
-                <option key={index} value={profession}>{profession}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-1">
-              Status
-            </label>
-            <select
-              id="status-filter"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-teal-500 focus:border-teal-500 block w-full p-2.5"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
-        </div>
-
+      <div className="flex flex-wrap justify-end items-center bg-white p-4 rounded-xl shadow-sm mb-6">
         <div className="flex items-center gap-2 mt-4 md:mt-0">
           <span className="text-sm text-gray-500">View:</span>
           <button
@@ -175,7 +153,7 @@ export default function AdminUsersPage() {
 
       {/* User Cards */}
       <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'} gap-6`}>
-        {filteredUsers.map(user => (
+        {paginatedUsers.map(user => (
           <div key={user.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
             <div className="bg-gradient-to-r from-teal-500 to-teal-800 p-4 text-white relative">
               <div className="flex justify-between">
@@ -254,8 +232,7 @@ export default function AdminUsersPage() {
         ))}
       </div>
 
-      {/* Empty State */}
-      {filteredUsers.length === 0 && (
+      {users.length === 0 && (
         <div className="bg-white rounded-xl shadow-sm p-8 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
             <i className="bi bi-search text-gray-500 text-2xl"></i>
@@ -267,14 +244,31 @@ export default function AdminUsersPage() {
 
       {/* Pagination */}
       <div className="flex justify-between items-center mt-6">
-        <p className="text-gray-500 text-sm">Showing {filteredUsers.length} of {users.length} users</p>
+        <p className="text-gray-500 text-sm">
+          Showing {(currentPage - 1) * usersPerPage + 1}–{Math.min(currentPage * usersPerPage, users.length)} of {users.length} users
+        </p>
         <div className="flex items-center gap-2">
-          <button className="px-3 py-1 border rounded-md text-gray-500 hover:bg-gray-100 disabled:opacity-50" disabled>
+          <button
+            className="px-3 py-1 border rounded-md text-gray-500 hover:bg-gray-100 disabled:opacity-50"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(prev => prev - 1)}
+          >
             <i className="bi bi-chevron-left"></i>
           </button>
-          <button className="px-3 py-1 bg-teal-500 text-white rounded-md">1</button>
-          <button className="px-3 py-1 border rounded-md text-gray-500 hover:bg-gray-100">2</button>
-          <button className="px-3 py-1 border rounded-md text-gray-500 hover:bg-gray-100">
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-3 py-1 rounded-md ${currentPage === i + 1 ? 'bg-teal-500 text-white' : 'border text-gray-500 hover:bg-gray-100'}`}
+            >
+              {i + 1}
+            </button>
+          ))}
+          <button
+            className="px-3 py-1 border rounded-md text-gray-500 hover:bg-gray-100 disabled:opacity-50"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(prev => prev + 1)}
+          >
             <i className="bi bi-chevron-right"></i>
           </button>
         </div>

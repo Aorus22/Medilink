@@ -1,6 +1,7 @@
 "use client"
 
 import { AppointmentResponse } from "@/app/api/appointments/route";
+import { formatDate } from "@/utils/customUtils";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
@@ -105,13 +106,13 @@ export default function AppointmentPage() {
 
       {filteredAppointments.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredAppointments.map((appointment) => (
+          {filteredAppointments.map((appointment: AppointmentResponse) => (
             <div key={appointment.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow relative">
               {/* Date and Queue Number */}
               <div className="bg-teal-600 text-white p-2 flex justify-between items-center">
                 <div className="flex items-center">
                   <i className="bi bi-calendar-date mr-2"></i>
-                  <span>{new Date(appointment.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                  <span>{formatDate(appointment.date)}</span>
                 </div>
                 <div className="flex items-center font-bold">
                   <i className="bi bi-person-lines-fill mr-1"></i>
