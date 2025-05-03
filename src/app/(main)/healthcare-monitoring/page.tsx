@@ -1,7 +1,6 @@
 "use client"
 import { useAuth } from "@/context/AuthContext";
 import { HistoricalData } from "#/prisma/db";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 

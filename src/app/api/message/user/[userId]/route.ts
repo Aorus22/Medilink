@@ -10,7 +10,7 @@ export async function GET(req: NextRequest, { params }: any) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const userId = params.userId;
+  const userId = (await params).userId;
   const doctorId = req.nextUrl.searchParams.get("doctorId");
 
   if (!userId || !doctorId) {
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest, { params }: any) {
     return NextResponse.json({ error: 'Missing doctorId in query' }, { status: 400 });
   }
 
-  const userId = params.userId;
+  const userId = (await params).userId;
 
   if (!userId) {
     return NextResponse.json({ error: "Missing userId" }, { status: 400 });

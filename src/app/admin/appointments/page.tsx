@@ -6,11 +6,13 @@ import Table from "@/components/Table";
 import { Search, Calendar, MapPin, User } from "lucide-react";
 import { AppointmentResponse } from "@/app/api/appointments/route";
 import { formatDate } from "@/utils/customUtils";
+import { useRouter } from "next/navigation";
 
 export default function AppointmentPage() {
   const [appointments, setAppointments] = useState<AppointmentResponse[]>([]);
   const [appointmentFilter, setAppointmentFilter] = useState("upcoming");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const today = new Date();
 
@@ -24,7 +26,6 @@ export default function AppointmentPage() {
         }
         const data = await response.json();
 
-        // Convert string `date` o objek `Date`
         const parsedAppointments = data.map((appt: any) => ({
           ...appt,
           date: new Date(appt.date),
@@ -41,11 +42,10 @@ export default function AppointmentPage() {
     fetchAppointments();
   }, []);
 
-
   const handleAcceptAppointment = async (appointmentId: number) => {
     try {
-      const response = await fetch(`/api/appointments/${appointmentId}/accept`, {
-        method: 'PATCH',
+      const response = await fetch(`/api/appointments/accept/${appointmentId}`, {
+        method: 'POST',
       });
       if (!response.ok) {
         throw new Error('Failed to accept appointment');
@@ -55,6 +55,7 @@ export default function AppointmentPage() {
           ? { ...appointment, status: 'confirmed' }
           : appointment
       ));
+      router.refresh();
     } catch (err) {
       console.error('Error accepting appointment:', err);
     }
@@ -62,7 +63,7 @@ export default function AppointmentPage() {
 
   const handleRejectAppointment = async (appointmentId: number) => {
     try {
-      const response = await fetch(`/api/appointments/${appointmentId}/reject`, {
+      const response = await fetch(`/api/appointments/reject/${appointmentId}`, {
         method: 'PATCH',
       });
       if (!response.ok) {
@@ -70,11 +71,27 @@ export default function AppointmentPage() {
       }
       setAppointments(prev => prev.map(appointment =>
         appointment.id === appointmentId
-          ? { ...appointment, status: 'cancelled' }
+          ? { ...appointment, status: 'rejected' }
           : appointment
       ));
     } catch (err) {
       console.error('Error rejecting appointment:', err);
+    }
+  };
+
+  const handleDeleteAppointment = async (appointmentId: number) => {
+    if (!confirm('Are you sure you want to delete this appointment?')) return;
+
+    try {
+      const response = await fetch(`/api/appointments/delete/${appointmentId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete appointment');
+      }
+      setAppointments(prev => prev.filter(appointment => appointment.id !== appointmentId));
+    } catch (err) {
+      console.error('Error deleting appointment:', err);
     }
   };
 
@@ -94,8 +111,7 @@ export default function AppointmentPage() {
     switch (status) {
       case "confirmed": return "bg-green-100 text-green-800";
       case "pending": return "bg-yellow-100 text-yellow-800";
-      case "completed": return "bg-blue-100 text-blue-800";
-      case "cancelled": return "bg-red-100 text-red-800";
+      case "rejected": return "bg-red-100 text-red-800";
       default: return "bg-gray-100 text-gray-800";
     }
   };
@@ -119,7 +135,8 @@ export default function AppointmentPage() {
           </div>
         </div>
       ),
-      sortable: false
+      accessorKey: "doctorName",
+      sortable: true
     },
     {
       header: "Date & Time",
@@ -161,7 +178,7 @@ export default function AppointmentPage() {
         </span>
       ),
       sortable: true,
-      accessor2: "status"
+      accessorKey: "status"
     },
     {
       header: "Notes",
@@ -204,7 +221,7 @@ export default function AppointmentPage() {
         emptyStateProps={{
           title: "No appointments found",
           description: `There are no ${appointmentFilter} appointments to display`,
-          actionLabel: "Schedule an Appointment",
+          actionLabel: "",
           onAction: () => window.location.href = "/doctors"
         }}
         searchPlaceholder="Search appointments..."
@@ -219,22 +236,30 @@ export default function AppointmentPage() {
           return "hover:bg-gray-50";
         }}
         actions={(appointment) => (
-          appointment.status === "pending" ? (
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleAcceptAppointment(appointment.id)}
-                className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-              >
-                Accept
-              </button>
-              <button
-                onClick={() => handleRejectAppointment(appointment.id)}
-                className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-              >
-                Reject
-              </button>
-            </div>
-          ) : null
+          <div className="flex gap-2">
+            {appointment.status === "pending" && (
+              <>
+                <button
+                  onClick={() => handleAcceptAppointment(appointment.id)}
+                  className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                >
+                  Accept
+                </button>
+                <button
+                  onClick={() => handleRejectAppointment(appointment.id)}
+                  className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                >
+                  Reject
+                </button>
+              </>
+            )}
+            <button
+              onClick={() => handleDeleteAppointment(appointment.id)}
+              className="px-3 py-1 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+            >
+              Delete
+            </button>
+          </div>
         )}
       />
     </div>

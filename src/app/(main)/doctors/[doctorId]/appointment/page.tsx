@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "react-toastify";
-import { DoctorDetailsResponse, DoctorPracticeHours } from "@/app/api/doctors/[id]/route";
+import { DoctorDetailsResponse, DoctorPracticeHours } from "@/app/api/doctors/[doctorId]/route";
 
 const doctorImage = "/assets/dashboard/doctor.svg";
 

@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '#/prisma/db';
@@ -9,6 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
 interface DecodedToken {
   userId: number;
   username: string;
+  role: 'USER' | 'ADMIN';
 }
 
 export async function GET(req: NextRequest) {
@@ -27,6 +27,29 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401 });
     }
 
+    // Handle special admin case
+    if (decoded.userId === 999999 && decoded.username === 'admin') {
+      return NextResponse.json(
+        {
+          message: 'Token is valid',
+          user: {
+            id: 999999,
+            username: 'admin',
+            name: 'Administrator',
+            role: 'ADMIN',
+            birthdate: null,
+            religion: null,
+            address: null,
+            avatar: null,
+            profession: null,
+          },
+          token,
+        },
+        { status: 200 }
+      );
+    }
+
+    // Regular user validation
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
     });
@@ -46,7 +69,8 @@ export async function GET(req: NextRequest) {
           religion: user.religion,
           address: user.address,
           avatar: user.avatar,
-          profession : user.profession
+          profession: user.profession,
+          role: decoded.role,
         },
         token,
       },

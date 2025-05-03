@@ -46,7 +46,7 @@ function UserMessageListPage() {
   const [loadingDoctors, setLoadingDoctors] = useState(false);
   const [doctorSearchTerm, setDoctorSearchTerm] = useState("");
 
-  const doctorId = searchParams.get("doctorId") || "1";
+  const doctorId = searchParams.get("doctorId");
 
   const filteredUsers = users.filter((user) =>
     user.name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
@@ -117,7 +117,8 @@ function UserMessageListPage() {
     message.userUsername.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getInitials = (name: string) => {
+  const getInitials = (name?: string) => {
+    if (!name) return "?";
     return name
       .split(" ")
       .map((n) => n[0])
@@ -138,31 +139,31 @@ function UserMessageListPage() {
       </div>
 
       {/* Doctor Profile */}
-      {doctor && (
-        <div
-          className="mb-5 cursor-pointer"
-          onClick={() => {
-            setShowDoctorList(true);
-            fetchDoctors();
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              {doctor.avatar ? (
-                <img src={doctor.avatar} alt={doctor.name} className="w-12 h-12 rounded-full" />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-lg">
-                  {getInitials(doctor.name)}
-                </div>
-              )}
-            </div>
-            <div>
-              <h3 className="font-medium text-gray-800">{doctor.name}</h3>
-              <p className="text-sm text-indigo-600">{doctor.specialist}</p>
-            </div>
+      <div
+        className="mb-5 cursor-pointer"
+        onClick={() => {
+          setShowDoctorList(true);
+          fetchDoctors();
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            {doctor?.avatar ? (
+              <img src={doctor.avatar} alt={doctor.name} className="w-12 h-12 rounded-full" />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-lg">
+                {doctor ? getInitials(doctor.name) : "?"}
+              </div>
+            )}
+          </div>
+          <div>
+            <h3 className="font-medium text-gray-800">{doctor?.name ?? "Select a doctor"}</h3>
+            <p className="text-sm text-indigo-600">
+              {doctor?.specialist ?? "Click to choose a doctor"}
+            </p>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Search */}
       <div className="relative w-full max-w-md mb-5">

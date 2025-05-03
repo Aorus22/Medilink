@@ -41,16 +41,15 @@ export default function AdminUsersPage() {
 
   // const professions = [...new Set(users.map(user => user.profession))];
 
-  // const filteredUsers = users.filter(user => {
-  //   const matchesSearch =
-  //     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //     user.username.toLowerCase().includes(searchTerm.toLowerCase());
-  //   const matchesProfession = filterProfession === '' || user.profession === filterProfession;
-  //   return matchesSearch && matchesProfession;
-  // });
+  const filteredUsers = users.filter(user => {
+    const search = searchTerm.toLowerCase();
+    return Object.values(user).some(value =>
+      typeof value === 'string' && value.toLowerCase().includes(search)
+    );
+  });
 
-  const totalPages = Math.ceil(users.length / usersPerPage);
-  const paginatedUsers = users.slice(
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  const paginatedUsers = filteredUsers.slice(
     (currentPage - 1) * usersPerPage,
     currentPage * usersPerPage
   );
@@ -78,8 +77,11 @@ export default function AdminUsersPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <i className="bi bi-arrow-clockwise text-3xl text-teal-500 animate-spin"></i>
+      <div className="flex justify-center h-full items-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500 mx-auto mb-4"></div>
+          <p className="text-lg font-medium text-gray-700">Loading data</p>
+        </div>
       </div>
     );
   }
@@ -100,29 +102,6 @@ export default function AdminUsersPage() {
 
   return (
     <main className="flex-grow p-5 overflow-y-auto">
-      <div className="flex justify-between items-center mb-5">
-        <div className="relative w-full max-w-sm">
-          <i className="bi bi-search absolute top-1/2 left-3 -translate-y-1/2 text-teal-500 text-sm"></i>
-          <input
-            type="text"
-            className="w-full pl-9 pr-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300"
-            placeholder="Search users..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <img src="/avatar.jpg" alt="Admin" className="w-10 h-10 rounded-full" />
-            <div>
-              <strong>Admin</strong>
-              <br />
-              <small>System Administrator</small>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
         <div className="flex items-center gap-3">
@@ -133,7 +112,18 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      <div className="flex flex-wrap justify-end items-center bg-white p-4 rounded-xl shadow-sm mb-6">
+      <div className="flex flex-wrap justify-between items-center bg-white p-4 rounded-xl shadow-sm mb-6">
+        <div className="relative w-full max-w-sm">
+          <i className="bi bi-search absolute top-1/2 left-3 -translate-y-1/2 text-teal-500 text-sm"></i>
+          <input
+            type="text"
+            className="w-full pl-9 pr-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300"
+            placeholder="Search users..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
         <div className="flex items-center gap-2 mt-4 md:mt-0">
           <span className="text-sm text-gray-500">View:</span>
           <button
@@ -217,7 +207,7 @@ export default function AdminUsersPage() {
                 </div>
               </div>
 
-              <div className="border-t mt-4 pt-4 flex justify-between">
+              {/* <div className="border-t mt-4 pt-4 flex justify-between">
                 <button className="text-teal-600 hover:text-teal-800 flex items-center gap-1">
                   <i className="bi bi-pencil-square"></i>
                   <span>Edit</span>
@@ -226,7 +216,7 @@ export default function AdminUsersPage() {
                   <i className="bi bi-trash"></i>
                   <span>Delete</span>
                 </button>
-              </div>
+              </div> */}
             </div>
           </div>
         ))}
@@ -245,7 +235,7 @@ export default function AdminUsersPage() {
       {/* Pagination */}
       <div className="flex justify-between items-center mt-6">
         <p className="text-gray-500 text-sm">
-          Showing {(currentPage - 1) * usersPerPage + 1}–{Math.min(currentPage * usersPerPage, users.length)} of {users.length} users
+          Showing {(currentPage - 1) * usersPerPage + 1}–{Math.min(currentPage * usersPerPage, filteredUsers.length)} of {filteredUsers.length} users
         </p>
         <div className="flex items-center gap-2">
           <button

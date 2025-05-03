@@ -23,13 +23,13 @@ export interface DoctorDetailsResponse {
 
 export async function GET(req: NextRequest, { params }: any) {
   try {
-    const id = (await params).id;
-    if (!id) {
+    const doctorId = (await params).doctorId;
+    if (!doctorId) {
       return NextResponse.json({ error: 'Missing ID parameter' }, { status: 400 });
     }
 
     const doctor = await prisma.doctor.findUnique({
-      where: { id: parseInt(id, 10) },
+      where: { id: parseInt(doctorId, 10) },
       include: { practiceHours: true },
     });
 

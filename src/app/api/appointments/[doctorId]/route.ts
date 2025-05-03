@@ -10,7 +10,7 @@ export async function POST(req: NextRequest, { params }: any) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const doctorId = params.doctorId;
+  const doctorId = (await params).doctorId;
 
   if (!doctorId) {
     return NextResponse.json({ error: "Missing doctorId" }, { status: 400 });
@@ -30,17 +30,6 @@ export async function POST(req: NextRequest, { params }: any) {
   const endOfDay = new Date(appointmentDate);
   endOfDay.setHours(23, 59, 59, 999);
 
-  const confirmedAppointmentsCount = await prisma.appointment.count({
-    where: {
-      doctorId: parseInt(doctorId),
-      status: 'confirmed',
-      date: {
-        gte: startOfDay,
-        lte: endOfDay,
-      },
-    },
-  });
-
   const newAppointment = await prisma.appointment.create({
     data: {
       date: appointmentDate,
@@ -48,7 +37,7 @@ export async function POST(req: NextRequest, { params }: any) {
       information,
       status: 'pending',
       confirmTime: new Date(),
-      queueNum: confirmedAppointmentsCount + 1,
+      queueNum: 0,
 
       userId: parseInt(userId),
       doctorId: parseInt(doctorId),

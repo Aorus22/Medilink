@@ -72,9 +72,10 @@ export default function Table<T>({
 
     return initialData.filter((item) => {
       return columns.some((column) => {
-        if (typeof column.accessor === "function") return false;
 
-        const value = item[column.accessor as keyof T];
+        if (!column.accessorKey) return false;
+
+        const value = item[column.accessorKey as keyof T];
         if (value === null || value === undefined) return false;
 
         return String(value).toLowerCase().includes(searchTerm.toLowerCase());
