@@ -1,8 +1,10 @@
-"use client"
+"use client";
+
 import { useAuth } from "@/context/AuthContext";
 import { HistoricalData } from "#/prisma/db";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import MedicalCheckupChart from "@/components/MedicalCheckUpChart";
 
 export default function HealthcareMonitoringPage() {
   const [historicalData, setHistoricalData] = useState<HistoricalData[]>([]);
@@ -32,10 +34,10 @@ export default function HealthcareMonitoringPage() {
     if (isNaN(parsedDate.getTime())) {
       throw new Error("Invalid date format");
     }
-    return parsedDate.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    return parsedDate.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -43,13 +45,13 @@ export default function HealthcareMonitoringPage() {
     { name: "Temperature", value: "37.5", unit: "°C" },
     { name: "Blood Pressure", value: "120/80", unit: "mmHg" },
     { name: "Heart Rate", value: "78", unit: "BPM" },
-    { name: "SPO2", value: "98", unit: "%" }
+    { name: "SPO2", value: "98", unit: "%" },
   ];
 
   const handleSend = async () => {
     try {
       setLoadingSend(true);
-      const payload = vitalSigns.map(sign => ({
+      const payload = vitalSigns.map((sign) => ({
         parameter: sign.name,
         value: sign.value,
         unit: sign.unit,
@@ -78,12 +80,12 @@ export default function HealthcareMonitoringPage() {
     }
   };
 
-
-  if (loading) return (
-    <div className="flex justify-center items-center h-full">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-full">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
+      </div>
+    );
 
   return (
     <div className="p-6">
@@ -94,33 +96,55 @@ export default function HealthcareMonitoringPage() {
 
       {/* Diagnoses Section */}
       <div className="mb-6">
-
         <div className="flex flex-col gap-6 pb-6">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Patient Information */}
             <div className="flex flex-col w-full border rounded-xl shadow-sm">
               <div className="h-[50px] flex items-center bg-teal-50 rounded-t-xl">
-                <p className="pl-5 text-xl font-semibold text-teal-800">Patient Information</p>
+                <p className="pl-5 text-xl font-semibold text-teal-800">
+                  Patient Information
+                </p>
               </div>
               <div className="flex flex-col gap-4 p-5">
-                <p><span className="font-medium">Name:</span> {user?.name}</p>
-                <p><span className="font-medium">Birth Date:</span> {formatDate(user?.birthdate || "0")}</p>
-                <p><span className="font-medium">Location:</span> {user?.address}</p>
-                <p><span className="font-medium">Profession:</span> {user?.profession}</p>
-                <p><span className="font-medium">Religion:</span> {user?.religion}</p>
+                <p>
+                  <span className="font-medium">Name:</span> {user?.name}
+                </p>
+                <p>
+                  <span className="font-medium">Birth Date:</span>{" "}
+                  {user?.birthdate ? formatDate(user.birthdate) : "N/A"}
+                </p>
+                <p>
+                  <span className="font-medium">Location:</span> {user?.address}
+                </p>
+                <p>
+                  <span className="font-medium">Profession:</span>{" "}
+                  {user?.profession}
+                </p>
+                <p>
+                  <span className="font-medium">Religion:</span> {user?.religion}
+                </p>
               </div>
             </div>
 
             {/* Current Vital Signs */}
             <div className="flex flex-col w-full border rounded-xl shadow-sm">
               <div className="h-[50px] flex items-center bg-teal-50 rounded-t-xl">
-                <p className="pl-5 text-xl font-semibold text-teal-800">Current Vital Signs</p>
+                <p className="pl-5 text-xl font-semibold text-teal-800">
+                  Current Vital Signs
+                </p>
               </div>
               <div className="flex flex-wrap w-full p-5">
                 {vitalSigns.map((sign, index) => (
-                  <div key={index} className="flex-1 flex flex-col items-center justify-center gap-2 py-6 min-w-[150px]">
-                    <p className="text-lg font-medium text-teal-800">{sign.name}</p>
-                    <p className="text-4xl font-bold text-teal-800">{sign.value}</p>
+                  <div
+                    key={index}
+                    className="flex-1 flex flex-col items-center justify-center gap-2 py-6 min-w-[150px]"
+                  >
+                    <p className="text-lg font-medium text-teal-800">
+                      {sign.name}
+                    </p>
+                    <p className="text-4xl font-bold text-teal-800">
+                      {sign.value}
+                    </p>
                     <p className="text-sm">{sign.unit}</p>
                   </div>
                 ))}
@@ -130,14 +154,16 @@ export default function HealthcareMonitoringPage() {
 
           {/* Submit Button */}
           <div className="flex justify-center">
-            <button onClick={handleSend} className="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition">
+            <button
+              onClick={handleSend}
+              className="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition"
+            >
               {loadingSend ? (
                 <>
-                <span className="inline-block animate-spin mr-2">⟳</span>
-                Sending...
+                  <span className="inline-block animate-spin mr-2">⟳</span>
+                  Sending...
                 </>
-
-              ) :(
+              ) : (
                 <>Send</>
               )}
             </button>
@@ -146,7 +172,9 @@ export default function HealthcareMonitoringPage() {
           {/* Historical Data */}
           <div className="flex flex-col w-full border rounded-xl shadow-sm">
             <div className="h-[50px] flex items-center bg-teal-50 rounded-t-xl">
-              <p className="pl-5 text-xl font-semibold text-teal-800">Historical Data</p>
+              <p className="pl-5 text-xl font-semibold text-teal-800">
+                Historical Data
+              </p>
             </div>
             <div className="w-full overflow-x-auto">
               <table className="w-full">
@@ -162,7 +190,9 @@ export default function HealthcareMonitoringPage() {
                   {historicalData?.map((data: HistoricalData, index: any) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="p-4 border-b">{data.parameter}</td>
-                      <td className="p-4 border-b">{data.value} {data.unit}</td>
+                      <td className="p-4 border-b">
+                        {data.value} {data.unit}
+                      </td>
                       <td className="p-4 border-b">{data.information}</td>
                       <td className="p-4 border-b">{formatDate(data.date)}</td>
                     </tr>
@@ -171,6 +201,11 @@ export default function HealthcareMonitoringPage() {
               </table>
             </div>
           </div>
+
+          {/* Chart Section */}
+          {historicalData.length > 0 && (
+            <MedicalCheckupChart data={historicalData as any} />
+          )}
         </div>
       </div>
     </div>

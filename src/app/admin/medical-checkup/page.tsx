@@ -1,12 +1,34 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useMemo } from "react";
 import Table from "@/components/Table";
 import { Trash2, Search } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { formatDate } from "@/utils/customUtils";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import MedicalCheckupChart from "@/components/MedicalCheckUpChart";
 
-interface MedicalCheckupData {
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+export interface MedicalCheckupData {
   id: number;
   parameter: string;
   value: string;
@@ -43,13 +65,13 @@ function MedicalCheckup() {
   const [showUserList, setShowUserList] = useState(false);
   const [userSearchTerm, setUserSearchTerm] = useState("");
 
-	const pathname = usePathname();
+  const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
 
   // Handle user ID from query parameters
   useEffect(() => {
-    const userId = searchParams.get('userId');
+    const userId = searchParams.get("userId");
     if (userId && !isNaN(parseInt(userId))) {
       setSelectedUserId(parseInt(userId));
     } else {
@@ -91,26 +113,26 @@ function MedicalCheckup() {
   }, [selectedUserId]);
 
   useEffect(() => {
-		async function fetchSelectedUser() {
-			if (!selectedUserId) {
-				setSelectedUser(null);
-				return;
-			}
+    async function fetchSelectedUser() {
+      if (!selectedUserId) {
+        setSelectedUser(null);
+        return;
+      }
 
-			try {
-				const response = await fetch("/api/user-list");
-				if (!response.ok) {
-					throw new Error("Failed to fetch user list");
-				}
+      try {
+        const response = await fetch("/api/user-list");
+        if (!response.ok) {
+          throw new Error("Failed to fetch user list");
+        }
 
-				const data: User[] = await response.json();
-				const foundUser = data.find((user) => user.id === selectedUserId);
-				setSelectedUser(foundUser ?? null);
-			} catch (err: any) {
-				console.error("Error fetching user:", err);
-				setSelectedUser(null);
-			}
-		}
+        const data: User[] = await response.json();
+        const foundUser = data.find((user) => user.id === selectedUserId);
+        setSelectedUser(foundUser ?? null);
+      } catch (err: any) {
+        console.error("Error fetching user:", err);
+        setSelectedUser(null);
+      }
+    }
 
     fetchSelectedUser();
   }, [selectedUserId]);
@@ -137,15 +159,18 @@ function MedicalCheckup() {
     if (confirm("Are you sure you want to delete this record?")) {
       try {
         setLoading(true);
-        const response = await fetch(`/api/medical-checkup/${selectedUserId}?dataId=${dataId}`, {
-          method: "DELETE",
-        });
+        const response = await fetch(
+          `/api/medical-checkup/${selectedUserId}?dataId=${dataId}`,
+          {
+            method: "DELETE",
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to delete record");
         }
 
-        setCheckupData(checkupData.filter(item => item.id !== dataId));
+        setCheckupData(checkupData.filter((item) => item.id !== dataId));
       } catch (err: any) {
         console.error("Error deleting record:", err);
         alert("Failed to delete record");
@@ -156,14 +181,15 @@ function MedicalCheckup() {
   };
 
   const handleUserSelect = (user: User) => {
-		router.push(`${pathname}?userId=${user.id}`);
-		setSelectedUserId(user.id);
-		setShowUserList(false);
+    router.push(`${pathname}?userId=${user.id}`);
+    setSelectedUserId(user.id);
+    setShowUserList(false);
   };
 
-  const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-    user.username.toLowerCase().includes(userSearchTerm.toLowerCase())
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+      user.username.toLowerCase().includes(userSearchTerm.toLowerCase())
   );
 
   const getInitials = (name: string) => {
@@ -186,11 +212,13 @@ function MedicalCheckup() {
     {
       header: "Information",
       accessor: (data: MedicalCheckupData) => (
-        <div className={`px-2 py-1 rounded text-sm inline-block ${
-          data.information === "Normal"
-            ? "bg-green-100 text-green-800"
-            : "bg-yellow-100 text-yellow-800"
-        }`}>
+        <div
+          className={`px-2 py-1 rounded text-sm inline-block ${
+            data.information === "Normal"
+              ? "bg-green-100 text-green-800"
+              : "bg-yellow-100 text-yellow-800"
+          }`}
+        >
           {data.information}
         </div>
       ),
@@ -208,32 +236,36 @@ function MedicalCheckup() {
       </div>
 
       {/* User Profile */}
-			<div
-				className="mb-5 cursor-pointer"
-				onClick={() => {
-					setShowUserList(true);
-				}}
-			>
-				<div className="flex items-center gap-3">
-					<div className="relative">
-						{selectedUser?.avatar ? (
-							<img src={selectedUser.avatar} alt={selectedUser.name} className="w-12 h-12 rounded-full" />
-						) : (
-							<div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 font-bold text-lg">
-								{selectedUser ? getInitials(selectedUser.name) : "?"}
-							</div>
-						)}
-					</div>
-					<div>
-						<h3 className="font-medium text-gray-800">
-							{selectedUser ? selectedUser.name : "Select a user"}
-						</h3>
-						<p className="text-sm text-teal-600">
-							{selectedUser ? `@${selectedUser.username}` : "Click to choose user"}
-						</p>
-					</div>
-				</div>
-			</div>
+      <div
+        className="mb-5 cursor-pointer"
+        onClick={() => {
+          setShowUserList(true);
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            {selectedUser?.avatar ? (
+              <img
+                src={selectedUser.avatar}
+                alt={selectedUser.name}
+                className="w-12 h-12 rounded-full"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 font-bold text-lg">
+                {selectedUser ? getInitials(selectedUser.name) : "?"}
+              </div>
+            )}
+          </div>
+          <div>
+            <h3 className="font-medium text-gray-800">
+              {selectedUser ? selectedUser.name : "Select a user"}
+            </h3>
+            <p className="text-sm text-teal-600">
+              {selectedUser ? `@${selectedUser.username}` : "Click to choose user"}
+            </p>
+          </div>
+        </div>
+      </div>
 
       <div className="bg-white rounded-lg shadow">
         <Table
@@ -266,14 +298,28 @@ function MedicalCheckup() {
         />
       </div>
 
+      {/* Chart Section */}
+      {checkupData.length > 0 && <MedicalCheckupChart data={checkupData} />}
+
       {/* Floating action button for user selection */}
       <div className="absolute bottom-6 right-6 z-40">
         <button
           onClick={() => setShowUserList(true)}
           className="w-14 h-14 rounded-full bg-gradient-to-r from-teal-500 to-teal-700 text-white shadow-lg flex items-center justify-center hover:opacity-90 transition"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            className="w-6 h-6"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
           </svg>
         </button>
       </div>
@@ -288,8 +334,19 @@ function MedicalCheckup() {
                 onClick={() => setShowUserList(false)}
                 className="text-gray-500 hover:text-gray-700 transition"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  className="w-6 h-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -320,7 +377,11 @@ function MedicalCheckup() {
                     <div className="flex items-center gap-3">
                       <div className="relative">
                         {user.avatar ? (
-                          <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full" />
+                          <img
+                            src={user.avatar}
+                            alt={user.name}
+                            className="w-10 h-10 rounded-full"
+                          />
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 font-bold">
                             {getInitials(user.name)}
@@ -328,7 +389,9 @@ function MedicalCheckup() {
                         )}
                       </div>
                       <div>
-                        <h4 className="font-medium text-gray-800">{user.name}</h4>
+                        <h4 className="font-medium text-gray-800">
+                          {user.name}
+                        </h4>
                         <p className="text-sm text-teal-600">@{user.username}</p>
                       </div>
                     </div>
