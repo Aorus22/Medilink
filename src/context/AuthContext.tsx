@@ -1,6 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { toast } from 'react-toastify';
 
 export type UserData = {
   id: number;
@@ -15,7 +16,10 @@ export type UserData = {
 
 type AuthContextType = {
   user: UserData | null;
-  setAuthData: (data: { user: UserData; token: string }) => void;
+  // setAuthData: (data: { user: UserData; token: string }) => void;
+  register: (formData: any) => Promise<void>;
+  passwordLogin: (username: string, password: string) => Promise<void>;
+  qrLogin: (qrCode: string) => Promise<void>;
   logout: () => void;
 };
 
@@ -29,10 +33,75 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(data.user);
   };
 
+  const register = async (formData: any) => {
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || 'Registration failed');
+
+      toast.success('Registration successful');
+      window.location.href = '/login';
+    } catch (err: any) {
+        throw new Error("Register:" + err.message);
+    }
+  }
+
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
     router.push('/');
+  };
+
+  const passwordLogin = async (username: string, password: string) => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Login failed');
+
+      toast.success('Login successful');
+      setAuthData({
+        user: data.user,
+        token: data.token,
+      });
+      window.location.href = "/dashboard";
+    } catch (err: any) {
+        throw new Error("Login Error:" + err.message);
+    }
+  };
+
+  const qrLogin = async (qrCode: string) => {
+    try {
+      const response = await fetch(`/api/auth/login-qr?code=${qrCode}`,
+        { method: 'POST' }
+      );
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to login');
+      }
+
+      toast.success('Login successful');
+      setAuthData({
+        user: data.user,
+        token: data.token,
+      });
+      window.location.href = "/dashboard";
+    } catch (err: any) {
+      throw new Error("Login Error:" + err.message);
+    }
   };
 
   useEffect(() => {
@@ -54,7 +123,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setAuthData, logout }}>
+    <AuthContext.Provider value={{ user, register, passwordLogin, qrLogin, logout }}>
       {children}
     </AuthContext.Provider>
   );

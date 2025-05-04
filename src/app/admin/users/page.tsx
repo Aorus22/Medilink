@@ -195,7 +195,7 @@ export default function AdminUsersPage() {
                   <div className="text-center">
                     <div className="bg-white p-2 rounded-lg shadow-sm flex flex-col justify-center items-center">
                       <QRCodeCanvas
-                        value={`${encodeURIComponent(user.password)}`}
+                        value={`${user.password}`}
                         size={100}
                       />
                       <div className="mt-5 w-[240px] overflow-hidden break-words text-xs">

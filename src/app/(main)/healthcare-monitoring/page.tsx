@@ -41,12 +41,50 @@ export default function HealthcareMonitoringPage() {
     });
   };
 
-  const vitalSigns = [
-    { name: "Temperature", value: "37.5", unit: "°C" },
-    { name: "Blood Pressure", value: "120/80", unit: "mmHg" },
-    { name: "Heart Rate", value: "78", unit: "BPM" },
-    { name: "SPO2", value: "98", unit: "%" },
-  ];
+  // const vitalSigns = [
+  //   { name: "Temperature", value: "37.5", unit: "°C" },
+  //   { name: "Blood Pressure", value: "120/80", unit: "mmHg" },
+  //   { name: "Heart Rate", value: "78", unit: "BPM" },
+  //   { name: "SPO2", value: "98", unit: "%" },
+  // ];
+
+  const [vitalSigns, setVitalSigns] = useState([
+    { name: "Temperature", value: "--", unit: "°C" },
+    { name: "Blood Pressure", value: "--", unit: "mmHg" },
+    { name: "Heart Rate", value: "--", unit: "BPM" },
+    { name: "SPO2", value: "--", unit: "%" },
+  ]);
+
+  useEffect(() => {
+    const ws = new WebSocket("ws://localhost:3001");
+
+    ws.onopen = () => {
+      console.log("WebSocket connected");
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        if (msg.type === "sensor_data" && msg.data) {
+          const { temperature, spo2, heartrate, blood_pressure } = msg.data;
+
+          const newSigns = [
+            { name: "Temperature", value: temperature || "--", unit: "°C" },
+            { name: "Blood Pressure", value: blood_pressure || "--", unit: "mmHg" },
+            { name: "Heart Rate", value: heartrate || "--", unit: "BPM" },
+            { name: "SPO2", value: spo2 || "--", unit: "%" },
+          ];
+
+          setVitalSigns(newSigns);
+        }
+      } catch (err) {
+        console.error("WebSocket parsing error", err);
+      }
+    };
+
+    return () => ws.close();
+  }, []);
+
 
   const handleSend = async () => {
     try {

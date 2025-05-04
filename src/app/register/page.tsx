@@ -1,59 +1,56 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import { toast } from 'react-toastify';
+import { useAuth } from '@/context/AuthContext';
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
     confirmPassword: '',
-    fullName: '',
-    birthDate: '',
+    name: '',
+    birthdate: '',
     religion: '',
     address: '',
     profession: ''
   });
 
-  const [signupStatus, setSignupStatus] = useState<{ message: string; error: boolean } | null>(null);
+  const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
-  const [passwordError, setPasswordError] = useState('');
+
+  const { register } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-
-    if (name === 'password' || name === 'confirmPassword') {
-      setPasswordError('');
-    }
   };
 
   const validateStep1 = () => {
     if (!formData.username || !formData.password || !formData.confirmPassword) {
-      setSignupStatus({ message: 'Please fill all required fields', error: true });
+      toast.warn('Please fill all required fields')
       return false;
     }
 
     if (formData.password.length < 8) {
-      setPasswordError('Password must be at least 8 characters long');
+      toast.warn('Password must be at least 8 characters long');
       return false;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setPasswordError('Passwords do not match');
+      toast.warn('Passwords do not match');
       return false;
     }
 
-    setSignupStatus(null);
     return true;
   };
 
   const validateStep2 = () => {
-    if (!formData.fullName || !formData.birthDate || !formData.religion) {
-      setSignupStatus({ message: 'Please fill all required fields', error: true });
+    if (!formData.name || !formData.birthdate || !formData.religion) {
+      toast.warn('Please fill all required fields')
       return false;
     }
 
-    setSignupStatus(null);
     return true;
   };
 
@@ -64,46 +61,23 @@ export default function SignupPage() {
 
   const prevStep = () => {
     setStep(step => Math.max(1, step - 1));
-    setSignupStatus(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.address || !formData.profession) {
-      setSignupStatus({ message: 'Please fill all required fields', error: true });
+      toast.warn('Please fill all required fields')
       return;
     }
 
-    try {
-      const response = await fetch('/api/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.error || 'Registration failed');
-
-      setSignupStatus({ message: 'Registration successful! You can now login.', error: false });
-
-      setFormData({
-        username: '',
-        password: '',
-        confirmPassword: '',
-        fullName: '',
-        birthDate: '',
-        religion: '',
-        address: '',
-        profession: ''
-      });
-      setStep(1);
-    } catch (err: any) {
-      setSignupStatus({ message: err.message, error: true });
-      console.error('Registration error:', err);
+    try{
+      setLoading(true);
+      await register(formData);
+    } catch (err: any){
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -160,7 +134,7 @@ export default function SignupPage() {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className={`w-full pl-9 pr-4 py-2 border-2 ${passwordError && formData.password ? 'border-red-300' : 'border-gray-300'} rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300`}
+              className={`w-full pl-9 pr-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300`}
               placeholder="Create a password (min. 8 characters)"
               required
             />
@@ -176,12 +150,11 @@ export default function SignupPage() {
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
-              className={`w-full pl-9 pr-4 py-2 border-2 ${passwordError && formData.confirmPassword ? 'border-red-300' : 'border-gray-300'} rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300`}
+              className={`w-full pl-9 pr-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300`}
               placeholder="Confirm your password"
               required
             />
           </div>
-          {passwordError && <p className="text-red-500 text-sm mt-1">{passwordError}</p>}
         </div>
       </div>
     </>
@@ -197,8 +170,8 @@ export default function SignupPage() {
             <i className="bi bi-person-badge absolute left-3 top-1/2 -translate-y-1/2 text-teal-500"></i>
             <input
               type="text"
-              name="fullName"
-              value={formData.fullName}
+              name="name"
+              value={formData.name}
               onChange={handleChange}
               className="w-full pl-9 pr-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300"
               placeholder="Enter your full name"
@@ -213,8 +186,8 @@ export default function SignupPage() {
             <i className="bi bi-calendar-date absolute left-3 top-1/2 -translate-y-1/2 text-teal-500"></i>
             <input
               type="date"
-              name="birthDate"
-              value={formData.birthDate}
+              name="birthdate"
+              value={formData.birthdate}
               onChange={handleChange}
               className="w-full pl-9 pr-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300"
               required
@@ -299,13 +272,17 @@ export default function SignupPage() {
         {renderStepIndicator()}
 
         <form onSubmit={handleSubmit} className="w-full">
-          {step === 1 && renderStep1()}
-          {step === 2 && renderStep2()}
-          {step === 3 && renderStep3()}
+          {!loading && (
+            <>
+              {step === 1 && renderStep1()}
+              {step === 2 && renderStep2()}
+              {step === 3 && renderStep3()}
+            </>
+          )}
 
-          {signupStatus && (
-            <div className={`mt-4 p-3 rounded-lg ${signupStatus.error ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-              {signupStatus.message}
+          {loading && (
+            <div className="flex justify-center items-center h-full">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
             </div>
           )}
 

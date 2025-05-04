@@ -301,29 +301,6 @@ function MedicalCheckup() {
       {/* Chart Section */}
       {checkupData.length > 0 && <MedicalCheckupChart data={checkupData} />}
 
-      {/* Floating action button for user selection */}
-      <div className="absolute bottom-6 right-6 z-40">
-        <button
-          onClick={() => setShowUserList(true)}
-          className="w-14 h-14 rounded-full bg-gradient-to-r from-teal-500 to-teal-700 text-white shadow-lg flex items-center justify-center hover:opacity-90 transition"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            className="w-6 h-6"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-        </button>
-      </div>
-
       {/* Modal for selecting user */}
       {showUserList && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">

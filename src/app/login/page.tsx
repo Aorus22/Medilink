@@ -51,8 +51,8 @@ export default function LoginPage() {
         {activeTab === 'password' ? (
             <PasswordLogin />
         ) : (
-          // <QRCodeLogin />
-          <div>QRCode</div>
+          <QRCodeLogin />
+          // <div>QRCode</div>
         )}
 
         {/* Footer */}

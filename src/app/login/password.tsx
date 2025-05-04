@@ -8,30 +8,15 @@ export default function PasswordLogin() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { setAuthData } = useAuth();
+  const { passwordLogin } = useAuth();
 
-  const handlePasswordLogin = async (e: React.FormEvent) => {
+  const handlePasswordLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       setLoading(true);
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Login failed');
-
-      toast.success('Login successful');
-      setAuthData({
-        user: data.user,
-        token: data.token,
-      });
-      window.location.href = "/dashboard";
-    } catch (err: any) {
+      await passwordLogin(username, password);
+    } catch (err: any){
       toast.error(err.message);
-      console.error('Login error:', err);
     } finally {
       setLoading(false);
     }

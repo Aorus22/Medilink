@@ -30,52 +30,28 @@ const setAuthCookie = async (user: { id: number; username: string }, role: Role)
 
 export async function POST(req: NextRequest) {
   try {
-    const { username, password } = await req.json();
+    const hashedPassword = req.nextUrl.searchParams.get('code');
 
-    // Special admin login
-    if (username === 'admin' && password === 'admin') {
-      const adminUser = {
-        id: 999999, // Special ID for hardcoded admin
-        username: 'admin',
-        name: 'Administrator',
-        role: 'ADMIN',
-        birthdate: null,
-        religion: null,
-        address: null,
-        avatar: null,
-        profession: null,
-      };
-
-      const token = await setAuthCookie(adminUser, 'ADMIN');
-      return NextResponse.json(
-        {
-          message: 'Admin login successful',
-          user: adminUser,
-          token,
-        },
-        { status: 200 }
-      );
+    if (!hashedPassword) {
+      return NextResponse.json({ error: 'QR code required' }, { status: 400 });
     }
 
-    // Regular user login
-    const user = await prisma.user.findUnique({
-      where: { username },
+    const user = await prisma.user.findFirst({
+      where: {
+        password: hashedPassword,
+      },
     });
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Invalid QR code' }, { status: 404 });
     }
 
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword) {
-      return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
-    }
-
-    const token = await setAuthCookie(user, 'USER');
+    const role = user.username === 'admin' ? 'ADMIN' : 'USER';
+    const token = await setAuthCookie(user, role);
 
     return NextResponse.json(
       {
-        message: 'Login successful',
+        message: 'QR Login successful',
         user: {
           id: user.id,
           username: user.username,
@@ -93,6 +69,6 @@ export async function POST(req: NextRequest) {
     );
 
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to login' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to login via QR' }, { status: 500 });
   }
 }

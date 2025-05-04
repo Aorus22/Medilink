@@ -1,115 +1,169 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
 import { toast } from 'react-toastify';
+import { CameraDevice, Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
+import { useAuth } from '@/context/AuthContext';
 
 export default function QRCodeLogin() {
   const [result, setResult] = useState('');
-  const [error, setError] = useState('');
+  // const [error, setError] = useState('');
   const [scanning, setScanning] = useState(true);
-  const [html5QrCode, setHtml5QrCode] = useState<Html5Qrcode | null>(null);
+  const [cameras, setCameras] = useState<CameraDevice[]>([]);
+  const [selectedCameraId, setSelectedCameraId] = useState<string>('');
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const [loading, setLoading] = useState(false);
+  const { qrLogin } = useAuth();
 
   const handleLogin = async (qrCode: string) => {
     try {
-      const response = await fetch(`/api/login?qr=${encodeURIComponent(qrCode)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to login');
-      }
-
-      toast.success('Login successful');
-
-      return data;
+      setLoading(true);
+      await qrLogin(qrCode);
     } catch (err: any) {
       toast.error(err.message);
-      return null;
-    }
-  };
-
-  const startScanner = () => {
-    setScanning(true);
-    setError('');
-    setResult('');
-
-    if (html5QrCode) {
-      const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-
-      html5QrCode.start(
-        { facingMode: 'environment' },
-        config,
-        async (decodedText) => {
-          setResult(decodedText);
-          const loginResult = await handleLogin(decodedText);
-          if (loginResult) {
-            html5QrCode.stop();
-            setScanning(false);
-          }
-        },
-        (error) => {
-          console.warn(`QR Code scan error: ${error}`);
-        }
-      ).catch((err) => {
-        console.error(`Unable to start QR scanner: ${err}`);
-        setError('Failed to start QR scanner');
-        setScanning(false);
-      });
+    } finally{
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    const qrScanner = new Html5Qrcode('qr-reader');
-    setHtml5QrCode(qrScanner);
-
-    return () => {
-      qrScanner.stop().catch((err) => {
-        console.error(`Error stopping QR scanner: ${err}`);
+    Html5Qrcode.getCameras()
+      .then((devices) => {
+        if (devices && devices.length) {
+          setCameras(devices);
+        } else {
+          toast.error('No camera detected');
+        }
+      })
+      .catch((err) => {
+        toast.error(`Failed to access camera`);
       });
-    };
   }, []);
 
   useEffect(() => {
-    if (html5QrCode && scanning) {
-      startScanner();
+    if (typeof window !== 'undefined' && scanning && selectedCameraId) {
+      if (scannerRef.current && scannerRef.current.getState() === Html5QrcodeScannerState.SCANNING) {
+        scannerRef.current.stop().then(() => scannerRef.current?.clear()).catch(() => {});
+        scannerRef.current = null;
+      }
+
+      const scanner = new Html5Qrcode('qr-reader');
+      scannerRef.current = scanner;
+
+      const onScanSuccess = (decodedText: string) => {
+        setResult(decodedText);
+        setScanning(false);
+        // scanner.stop().then(() => scanner.clear());
+        handleLogin(decodedText);
+      };
+
+      const onScanError = () => {};
+
+      (async () => {
+        try {
+          await scanner.start(
+            selectedCameraId,
+            { fps: 10, qrbox: { width: 400, height: 400 } },
+            onScanSuccess,
+            onScanError
+          );
+        } catch (e) {
+          toast.error("failed to start scanner");
+          // scanner.stop().then(() => scanner.clear()).catch(() => {});
+          scannerRef.current = null;
+        }
+      })();
+
+      return () => {
+        if (scannerRef.current) {
+          scannerRef.current.stop().then(() => scannerRef.current?.clear()).catch(() => {});
+          scannerRef.current = null;
+        }
+      };
     }
-  }, [html5QrCode]);
+  }, [scanning, selectedCameraId]);
+
+  const restartScanner = () => {
+    setResult('');
+    // setError('');
+    setScanning(true);
+  };
 
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="mb-4 text-center">
-        <p className="text-gray-600 mb-4">
-          Scan the QR code from your mobile app to login securely
-        </p>
+      <div className="mb-4 text-center w-full">
+        <p className="text-gray-600 mb-4">Scan QR Code</p>
 
-        <div
-          id="qr-reader"
-          className="w-full max-w-sm h-64 mx-auto rounded-lg overflow-hidden border-2 border-teal-500"
-        ></div>
+        {/* Camera select */}
+        {cameras.length > 0 && (
+          <select
+            value={selectedCameraId}
+            onChange={(e) => {
+              const selected = cameras.find((c) => c.id === e.target.value);
+              if (selected) setSelectedCameraId(selected.id);
+            }}
+            className="mb-4 p-2 border rounded-lg bg-white text-gray-700 focus:outline-none focus:border-teal-500"
+          >
+            <option value={""}>
+              Select a camera
+            </option>
+            {cameras.map((camera) => (
+              <option key={camera.id} value={camera.id}>
+                {camera.label}
+              </option>
+            ))}
+          </select>
+        )}
+
+        <div className="h-64">
+          {/* Area Scanner */}
+          {!loading && (
+            <div
+              id="qr-reader"
+              className="w-full h-full rounded-lg overflow-hidden border-2 border-teal-500 bg-gray-100 relative"
+            />
+          )}
+
+          {loading && (
+            <div className="flex justify-center items-center h-full">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
+            </div>
+          )}
+        </div>
+
+        {result && (
+          <div className="mt-4 p-4 rounded-lg">
+            <button
+              onClick={restartScanner}
+              className="mt-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
+            >
+              Scan Again
+            </button>
+          </div>
+        )}
+        {/* {error && (
+          <div className="mt-4 p-4 bg-red-100 rounded-lg">
+            <p className="text-red-800 font-medium">Error:</p>
+            <p className="text-red-600">{error}</p>
+            <button
+              onClick={restartScanner}
+              className="mt-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        )} */}
       </div>
 
-      {result && !error && (
-        <div className="mt-4 p-3 w-full bg-green-100 text-green-700 rounded-lg">
-          {result}
-        </div>
-      )}
-
-      {error && (
-        <div className="mt-4 p-3 w-full bg-red-100 text-red-700 rounded-lg flex flex-col items-center">
-          <p>Error: {error}</p>
-          <button
-            onClick={startScanner}
-            className="mt-2 bg-gradient-to-r from-teal-500 to-teal-700 text-white py-2 px-4 rounded-lg font-medium hover:opacity-90 transition"
-          >
-            Try Again
-          </button>
-        </div>
-      )}
+      <style jsx>{`
+        #qr-reader video {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          position: absolute;
+          top: 0;
+          left: 0;
+        }
+      `}</style>
     </div>
   );
 }

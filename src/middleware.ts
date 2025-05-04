@@ -13,9 +13,17 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Allow public routes
-  if (['/', '/login', '/register', '/api/auth/login', '/api/auth/register', '/api/auth/me'].includes(pathname)) {
-    return NextResponse.next();
-  }
+  const publicRoutes = [
+    '/',
+    '/login',
+    '/register',
+    '/api/auth/login',
+    '/api/auth/register',
+    '/api/auth/me',
+    'api/ws'
+  ]
+
+  if (publicRoutes.includes(pathname)) { return NextResponse.next() }
 
   // Allow all API routes for authenticated users
   if (pathname.startsWith('/api/')) {
@@ -29,15 +37,9 @@ export async function middleware(req: NextRequest) {
       const decoded = await verifyJWT(token);
 
       const response = NextResponse.next();
-      if (decoded.userId) {
-        response.headers.set('x-user-id', decoded.userId.toString());
-      }
-      if (decoded.username) {
-        response.headers.set('x-username', decoded.username as string);
-      }
-      if (decoded.role) {
-        response.headers.set('x-user-role', decoded.role as string);
-      }
+      response.headers.set('x-user-id', decoded.userId?.toString() || "");
+      response.headers.set('x-username', decoded.username?.toString() || "");
+      response.headers.set('x-user-role', decoded.role?.toString() || "");
 
       return response;
     } catch (error) {
@@ -67,15 +69,9 @@ export async function middleware(req: NextRequest) {
     }
 
     const response = NextResponse.next();
-    if (decoded.userId) {
-      response.headers.set('x-user-id', decoded.userId.toString());
-    }
-    if (decoded.username) {
-      response.headers.set('x-username', decoded.username as string);
-    }
-    if (decoded.role) {
-      response.headers.set('x-user-role', decoded.role as string);
-    }
+    response.headers.set('x-user-id', decoded.userId?.toString() || "");
+    response.headers.set('x-username', decoded.username?.toString() || "");
+    response.headers.set('x-user-role', decoded.role?.toString() || "");
 
     return response;
   } catch (error) {
