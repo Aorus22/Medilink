@@ -46,7 +46,7 @@ function UserMessageListPage() {
   const [loadingDoctors, setLoadingDoctors] = useState(false);
   const [doctorSearchTerm, setDoctorSearchTerm] = useState("");
 
-  const doctorId = searchParams.get("doctorId");
+  const doctorId = searchParams?.get("doctorId");
 
   const filteredUsers = users.filter((user) =>
     user.name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||

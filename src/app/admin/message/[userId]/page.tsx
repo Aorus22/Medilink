@@ -20,9 +20,11 @@ interface Message {
 }
 
 export default function UserChatPage() {
-  const { userId: id } = useParams();
-  const searchParams = useSearchParams();
-  const doctorId = searchParams.get("doctorId") || "1";
+  const params = useParams();
+  const id = params?.userId as string | undefined;
+
+    const searchParams = useSearchParams();
+  const doctorId = searchParams?.get("doctorId") || "1";
 
   const userId = parseInt(id as string);
   const [message, setMessage] = useState<string>("");

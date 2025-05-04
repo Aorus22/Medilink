@@ -11,7 +11,8 @@ const doctorImage = "/assets/dashboard/doctor.svg";
 export default function DoctorAppointmentPage() {
   const router = useRouter();
 
-  const { doctorId } = useParams();
+  const params = useParams();
+  const doctorId = params?.doctorId as string | undefined;
 
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);

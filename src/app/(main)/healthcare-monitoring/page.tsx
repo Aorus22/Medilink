@@ -49,40 +49,52 @@ export default function HealthcareMonitoringPage() {
   // ];
 
   const [vitalSigns, setVitalSigns] = useState([
-    { name: "Temperature", value: "--", unit: "°C" },
-    { name: "Blood Pressure", value: "--", unit: "mmHg" },
-    { name: "Heart Rate", value: "--", unit: "BPM" },
-    { name: "SPO2", value: "--", unit: "%" },
+    { name: "Temperature", value: "37.5", unit: "°C" },
+    { name: "Blood Pressure", value: "120/80", unit: "mmHg" },
+    { name: "Heart Rate", value: "78", unit: "BPM" },
+    { name: "SPO2", value: "98", unit: "%" },
   ]);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:3001");
-
-    ws.onopen = () => {
-      console.log("WebSocket connected");
-    };
-
-    ws.onmessage = (event) => {
+    const connectWebSocket = async () => {
       try {
-        const msg = JSON.parse(event.data);
-        if (msg.type === "sensor_data" && msg.data) {
-          const { temperature, spo2, heartrate, blood_pressure } = msg.data;
+        const res = await fetch("/api/ws");
+        if (!res.ok) throw new Error("Failed to fetch WebSocket URL");
+        const { url } = await res.json();
 
-          const newSigns = [
-            { name: "Temperature", value: temperature || "--", unit: "°C" },
-            { name: "Blood Pressure", value: blood_pressure || "--", unit: "mmHg" },
-            { name: "Heart Rate", value: heartrate || "--", unit: "BPM" },
-            { name: "SPO2", value: spo2 || "--", unit: "%" },
-          ];
+        const ws = new WebSocket(url);
 
-          setVitalSigns(newSigns);
-        }
-      } catch (err) {
-        console.error("WebSocket parsing error", err);
+        ws.onopen = () => {
+          console.log("WebSocket connected");
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            if (msg.type === "sensor_data" && msg.data) {
+              const { temperature, spo2, heartrate, blood_pressure } = msg.data;
+
+              const newSigns = [
+                { name: "Temperature", value: temperature || "--", unit: "°C" },
+                { name: "Blood Pressure", value: blood_pressure || "--", unit: "mmHg" },
+                { name: "Heart Rate", value: heartrate || "--", unit: "BPM" },
+                { name: "SPO2", value: spo2 || "--", unit: "%" },
+              ];
+
+              setVitalSigns(newSigns);
+            }
+          } catch (err) {
+            console.error("WebSocket parsing error", err);
+          }
+        };
+
+        return () => ws.close();
+      } catch (error) {
+        console.error("Failed to connect to WebSocket:", error);
       }
     };
 
-    return () => ws.close();
+    connectWebSocket();
   }, []);
 
 

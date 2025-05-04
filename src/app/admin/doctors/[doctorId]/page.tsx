@@ -45,7 +45,9 @@ const allDaysOfWeek = [
 ];
 
 const EditDoctorPage: React.FC = () => {
-  const { doctorId } = useParams();
+  const params = useParams();
+  const doctorId = params?.doctorId as string | undefined;
+
   const [doctorData, setDoctorData] = useState<DoctorData>(doctorDefault);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);

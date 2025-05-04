@@ -17,10 +17,10 @@ const generateSensorData = (): SensorData => ({
   blood_pressure: `${110 + Math.floor(Math.random() * 10)}/${70 + Math.floor(Math.random() * 10)}`, // mmHg
 });
 
-// Run WebSocket server at port 3001
-const wss = new WebSocketServer({ port: 3001 });
+// Run WebSocket server at port 7673
+const wss = new WebSocketServer({ port: 7673 });
 
-console.log('✅ WebSocket server listening on ws://localhost:3001');
+console.log('✅ WebSocket server listening on ws://localhost:7673');
 
 wss.on('connection', (ws: WebSocket) => {
   console.log('Client connected');

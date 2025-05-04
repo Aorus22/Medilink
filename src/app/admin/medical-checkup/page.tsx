@@ -71,7 +71,7 @@ function MedicalCheckup() {
 
   // Handle user ID from query parameters
   useEffect(() => {
-    const userId = searchParams.get("userId");
+    const userId = searchParams?.get("userId");
     if (userId && !isNaN(parseInt(userId))) {
       setSelectedUserId(parseInt(userId));
     } else {

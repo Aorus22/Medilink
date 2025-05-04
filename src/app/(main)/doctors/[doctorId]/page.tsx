@@ -8,7 +8,9 @@ import { Doctor } from "#/prisma/db";
 const doctorPlaceholder = "/assets/dashboard/doctor.svg";
 
 export default function DoctorProfile() {
-  const { doctorId } = useParams();
+  const params = useParams();
+  const doctorId = params?.doctorId as string | undefined;
+
   const pathname = usePathname();
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [loading, setLoading] = useState<boolean>(true);

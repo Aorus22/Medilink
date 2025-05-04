@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: medilink_user
       POSTGRES_PASSWORD: medilink_password
     ports:
-      - 7480:5432
+      - 7671:5432
     volumes:
       - medilink-pgdata:/var/lib/postgresql/data
 
@@ -18,9 +18,10 @@ services:
     restart: always
     environment:
       DATABASE_URL: "postgresql://medilink_user:medilink_password@postgres:5432/medilinkdb?schema=public"
+      WS_SERVER_URL: "ws://localhost:7673"
     ports:
       - 7672:3000 # Next JS
-      - 7673:3001 # Websocket
+      - 7673:7673 # Websocket
     depends_on:
       - postgres
 

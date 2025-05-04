@@ -19,8 +19,8 @@ interface Message {
 }
 
 export default function DoctorChatPage() {
-  const { doctorId: id } = useParams();
-  const doctorId = parseInt(id as string);
+  const params = useParams();
+  const doctorId = params?.doctorId as string | undefined;
   const [message, setMessage] = useState<string>("");
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [doctor, setDoctor] = useState<Doctor | null>(null);
