@@ -32,7 +32,7 @@ const Footer = () => {
 
       </div>
       <div className="px-16 pb-10">
-        <p>© MedLink All Rights Reserved.</p>
+        <p>© MedLink Smart All Rights Reserved.</p>
         <p className="mt-2 font-bold">Sponsorship</p>
         <div>
           <img className="h-12" src={"/assets/dynatech logo.png"}/>

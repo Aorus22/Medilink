@@ -25,13 +25,13 @@ const teamMembers: TeamMember[] = [
   },
   {
     name: "Muhammad Akmal Indratma",
-    role: "Medicine Student Team",
+    role: "Software Engineer",
     image: "/Team/team1.jpg",
     bio: "Provides medical input, identifies user needs, and tests the prototype to meet healthcare standards",
   },
   {
     name: "Marko Refianto",
-    role: "Software Engineer Student",
+    role: "IoT Engineer",
     image: "/Team/team2.jpg",
     bio: "Developing and testing Internet of Things (IoT) modules, ensuring stable connectivity and accuracy of blood pressure/temperature data for real-time monitoring.",
   },
