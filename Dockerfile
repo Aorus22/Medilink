@@ -1,3 +1,4 @@
+# 1. Build Stage
 FROM oven/bun:alpine AS deps
 WORKDIR /app
 
@@ -13,7 +14,7 @@ COPY . .
 RUN bunx prisma generate
 RUN bun run build
 
-# 3. Runner Stage
+# 2. Runner Stage
 FROM oven/bun:alpine AS runner
 WORKDIR /app
 

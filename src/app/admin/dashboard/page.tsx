@@ -7,6 +7,7 @@ import GoogleMaps from "@/components/GoogleMaps";
 import { useAuth } from "@/context/AuthContext";
 
 const doctor = "/assets/dashboard/doctor.svg";
+const patient = "/assets/dashboard/patient.png";
 const pharmacy = "/assets/dashboard/pharmacy.svg";
 const laboratory = "/assets/dashboard/laboratory.svg";
 const healthcare = "/assets/dashboard/White Colorful Concept Map Chart_page-0001.png";
@@ -56,7 +57,7 @@ export default function DashboardPage() {
         <h3 className="text-lg font-medium mb-3">Feature</h3>
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
           {[
-            { href: "/admin/users", src: doctor, label: "User" },
+            { href: "/admin/users", src: patient, label: "User" },
             { href: "/admin/medical-checkup", src: monitoring, label: "Medical Checkup" },
             { href: "/admin/doctors", src: doctor, label: "Doctor" },
             { href: "/admin/appointments", src: pharmacy, label: "Appointment" },

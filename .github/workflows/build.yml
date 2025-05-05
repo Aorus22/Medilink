@@ -37,13 +37,13 @@ jobs:
             fi
           elif [ "${{ github.event_name }}" == "push" ]; then
             echo "🔧 Triggered by push to main."
-            if [ -f .deploy-confirm ]; then
-              CONTENT=$(cat .deploy-confirm | tr -d '[:space:]')
+            if [ -f .build-confirm ]; then
+              CONTENT=$(cat .build-confirm | tr -d '[:space:]')
               if [ "$CONTENT" == "YES" ]; then
                 SHOULD_DEPLOY=true
               fi
             else
-              echo "⚠️ .deploy-confirm not found."
+              echo "⚠️ .build-confirm not found."
             fi
           fi
 
@@ -70,6 +70,6 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"secret": "${{ secrets.API_SECRET }}", "target": "${{ secrets.API_TARGET }}", "message": "${{ secrets.API_MESSAGE }}"}'
 
-      - name: Optional Reset .deploy-confirm
+      - name: Optional Reset .build-confirm
         if: steps.confirm.outputs.should-deploy == 'true' && github.event_name == 'push'
-        run: echo "NO" > .deploy-confirm
+        run: echo "NO" > .build-confirm
