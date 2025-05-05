@@ -9,12 +9,15 @@ export default function PasswordLogin() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { passwordLogin } = useAuth();
+  const router = useRouter();
 
   const handlePasswordLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       setLoading(true);
       await passwordLogin(username, password);
+      toast.success('Login successful');
+      router.push('/dashboard');
     } catch (err: any){
       toast.error(err.message);
     } finally {

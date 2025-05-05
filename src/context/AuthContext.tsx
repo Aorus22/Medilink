@@ -47,8 +47,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (!response.ok) throw new Error(data.error || 'Registration failed');
 
-      toast.success('Registration successful');
-      window.location.href = '/login';
     } catch (err: any) {
         throw new Error("Register:" + err.message);
     }
@@ -57,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
-    router.push('/');
+    window.location.href = '/';
   };
 
   const passwordLogin = async (username: string, password: string) => {
@@ -71,12 +69,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Login failed');
 
-      toast.success('Login successful');
       setAuthData({
         user: data.user,
         token: data.token,
       });
-      window.location.href = "/dashboard";
     } catch (err: any) {
         throw new Error("Login Error:" + err.message);
     }
@@ -93,12 +89,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(data.error || 'Failed to login');
       }
 
-      toast.success('Login successful');
       setAuthData({
         user: data.user,
         token: data.token,
       });
-      window.location.href = "/dashboard";
     } catch (err: any) {
       throw new Error("Login Error:" + err.message);
     }

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { CameraDevice, Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
 import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function QRCodeLogin() {
   const [result, setResult] = useState('');
@@ -13,11 +14,14 @@ export default function QRCodeLogin() {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [loading, setLoading] = useState(false);
   const { qrLogin } = useAuth();
+  const router = useRouter();
 
   const handleLogin = async (qrCode: string) => {
     try {
       setLoading(true);
       await qrLogin(qrCode);
+      toast.success('Login successful');
+      router.push('/dashboard');
     } catch (err: any) {
       toast.error(err.message);
     } finally{
@@ -50,6 +54,9 @@ export default function QRCodeLogin() {
       scannerRef.current = scanner;
 
       const onScanSuccess = (decodedText: string) => {
+        const beep = new Audio('/sound/beep.mp3');
+        beep.play();
+
         setResult(decodedText);
         setScanning(false);
         // scanner.stop().then(() => scanner.clear());
@@ -94,32 +101,30 @@ export default function QRCodeLogin() {
         <p className="text-gray-600 mb-4">Scan QR Code</p>
 
         {/* Camera select */}
-        {cameras.length > 0 && (
-          <select
-            value={selectedCameraId}
-            onChange={(e) => {
-              const selected = cameras.find((c) => c.id === e.target.value);
-              if (selected) setSelectedCameraId(selected.id);
-            }}
-            className="mb-4 p-2 border rounded-lg bg-white text-gray-700 focus:outline-none focus:border-teal-500"
-          >
-            <option value={""}>
-              Select a camera
+        <select
+          value={selectedCameraId}
+          onChange={(e) => {
+            const selected = cameras.find((c) => c.id === e.target.value);
+            if (selected) setSelectedCameraId(selected.id);
+          }}
+          className="mb-4 p-2 border rounded-lg bg-white text-gray-700 focus:outline-none focus:border-teal-500"
+        >
+          <option value={""}>
+            Select a camera
+          </option>
+          {cameras.map((camera) => (
+            <option key={camera.id} value={camera.id}>
+              {camera.label}
             </option>
-            {cameras.map((camera) => (
-              <option key={camera.id} value={camera.id}>
-                {camera.label}
-              </option>
-            ))}
-          </select>
-        )}
+          ))}
+        </select>
 
-        <div className="h-64">
+        <div className="h-64 relative border-teal-500 bg-gray-100 border-2">
           {/* Area Scanner */}
           {!loading && (
             <div
               id="qr-reader"
-              className="w-full h-full rounded-lg overflow-hidden border-2 border-teal-500 bg-gray-100 relative"
+              className="w-full h-full rounded-lg overflow-hidden relative"
             />
           )}
 
@@ -128,18 +133,19 @@ export default function QRCodeLogin() {
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
             </div>
           )}
+
+          {result && !loading && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-4 rounded-lg">
+              <button
+                onClick={restartScanner}
+                className="mt-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
+              >
+                Scan Again
+              </button>
+            </div>
+          )}
         </div>
 
-        {result && (
-          <div className="mt-4 p-4 rounded-lg">
-            <button
-              onClick={restartScanner}
-              className="mt-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
-            >
-              Scan Again
-            </button>
-          </div>
-        )}
         {/* {error && (
           <div className="mt-4 p-4 bg-red-100 rounded-lg">
             <p className="text-red-800 font-medium">Error:</p>

@@ -9,6 +9,7 @@ import { SelectedPage } from "@/utils/types";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
+import Link from "next/link";
 
 type Props = {
   isTopOfPage: boolean;
@@ -64,11 +65,11 @@ const Navbar = ({ isTopOfPage, selectedPage, setSelectedPage }: Props) => {
                       Diagnose Now
                     </p>
                   </NextLink> */}
-                  <a href="/dashboard">
+                  <Link href="/dashboard">
                     <p className="hover:text-teal-600 hover:underline cursor-pointer">
                       Dashboard
                     </p>
-                  </a>
+                  </Link>
                   {user ? (
                     <button onClick={logout} className="rounded-md bg-secondary-500 px-10 py-2 hover:bg-yellow-300 hover:text-white transition duration-300">
                       Logout
@@ -121,14 +122,14 @@ const Navbar = ({ isTopOfPage, selectedPage, setSelectedPage }: Props) => {
                   isTopOfPage={isTopOfPage}
                 />
               ))}
-              <a href="/dashboard">
+              <Link href="/dashboard">
                 <p
                   onClick={() => setIsMenuToggled(false)}
                   className="hover:text-teal-600 underline cursor-pointer"
                 >
                   Dashboard
                 </p>
-              </a>
+              </Link>
               {user ? (
                 <button onClick={logout} className="rounded-md bg-secondary-500 px-10 py-2 hover:bg-yellow-300 hover:text-white transition duration-300">
                   Logout

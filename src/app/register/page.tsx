@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -18,6 +19,7 @@ export default function SignupPage() {
 
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const router = useRouter();
 
   const { register } = useAuth();
 
@@ -74,6 +76,8 @@ export default function SignupPage() {
     try{
       setLoading(true);
       await register(formData);
+      toast.success('Registration successful');
+      router.push('/login');
     } catch (err: any){
       toast.error(err.message);
     } finally {
