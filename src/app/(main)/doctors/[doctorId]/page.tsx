@@ -81,9 +81,9 @@ export default function DoctorProfile() {
                 Book Appointment
               </button>
             </Link>
-            <button className="border border-teal-600 text-teal-600 px-6 py-2 rounded-full hover:bg-teal-50">
+            <Link href={`/message/${doctorId}`} className="border border-teal-600 text-teal-600 px-6 py-2 rounded-full hover:bg-teal-50">
               Send Message
-            </button>
+            </Link>
           </div>
         </div>
       </div>
