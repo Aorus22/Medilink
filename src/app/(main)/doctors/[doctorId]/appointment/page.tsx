@@ -181,7 +181,7 @@ export default function DoctorAppointmentPage() {
         {/* Practice Hours Display */}
         <div className="p-5 bg-gray-50">
           <h3 className="text-lg font-medium mb-3">Practice Schedule</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {doctor.practiceHours.map((hour) => (
               <div key={hour.id} className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
                 <span className="font-medium text-teal-700">{hour.dayOfWeek}</span>

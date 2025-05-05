@@ -52,7 +52,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             md:translate-x-0
           `}
         >
-          <Sidebar />
+          <Sidebar setSidebarOpen={setSidebarOpen}/>
         </aside>
 
         {/* Main Content */}

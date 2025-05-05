@@ -1,7 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { toast } from 'react-toastify';
 
 export type UserData = {
   id: number;
@@ -55,7 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
-    window.location.href = '/';
+    router.push('/');
   };
 
   const passwordLogin = async (username: string, password: string) => {
@@ -109,7 +108,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setAuthData({ user: data.user, token: data.token });
       } catch (err) {
         console.log('Session check failed:', err);
-        setUser(null);
       }
     };
 

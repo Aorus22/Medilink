@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
+import { cookies } from 'next/headers';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
 
@@ -20,22 +21,22 @@ export async function middleware(req: NextRequest) {
     '/api/auth/login',
     '/api/auth/register',
     '/api/auth/me',
-    'api/ws'
   ]
 
   if (publicRoutes.includes(pathname)) { return NextResponse.next() }
 
+  const cookieStore = await cookies();
+  const token = cookieStore.get('auth_token')?.value;
+
+  if (!token) {
+    return NextResponse.redirect(new URL('/login', req.url));
+  }
+
+  const decoded = await verifyJWT(token);
+
   // Allow all API routes for authenticated users
   if (pathname.startsWith('/api/')) {
     try {
-      const token = req.cookies.get('auth_token')?.value;
-
-      if (!token) {
-        return NextResponse.redirect(new URL('/login', req.url));
-      }
-
-      const decoded = await verifyJWT(token);
-
       const response = NextResponse.next();
       response.headers.set('x-user-id', decoded.userId?.toString() || "");
       response.headers.set('x-username', decoded.username?.toString() || "");
@@ -50,14 +51,6 @@ export async function middleware(req: NextRequest) {
 
   // Handle non-API routes
   try {
-    const token = req.cookies.get('auth_token')?.value;
-
-    if (!token) {
-      return NextResponse.redirect(new URL('/login', req.url));
-    }
-
-    const decoded = await verifyJWT(token);
-
     // Restrict ADMIN to /admin/* only
     if (decoded.role === 'ADMIN' && !pathname.startsWith('/admin/')) {
       return NextResponse.redirect(new URL('/admin/dashboard', req.url));
@@ -69,10 +62,6 @@ export async function middleware(req: NextRequest) {
     }
 
     const response = NextResponse.next();
-    response.headers.set('x-user-id', decoded.userId?.toString() || "");
-    response.headers.set('x-username', decoded.username?.toString() || "");
-    response.headers.set('x-user-role', decoded.role?.toString() || "");
-
     return response;
   } catch (error) {
     console.error('JWT verification failed:', error);

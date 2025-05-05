@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { RightbarContext } from '@/context/RightbarContext';
 import GoogleMaps from "@/components/GoogleMaps";
 import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 const doctor = "/assets/dashboard/doctor.svg";
 const pharmacy = "/assets/dashboard/pharmacy.svg";

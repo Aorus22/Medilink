@@ -3,13 +3,12 @@
 import { useState } from "react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/solid";
 import Image from "next/image";
-import NextLink from "next/link";
+import Link from "next/link";
 import CustomLink from "./Link";
 import { SelectedPage } from "@/utils/types";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
-import Link from "next/link";
 
 type Props = {
   isTopOfPage: boolean;
@@ -60,24 +59,24 @@ const Navbar = ({ isTopOfPage, selectedPage, setSelectedPage }: Props) => {
                   ))}
                 </div>
                 <div className={`${flexBetween} gap-8`}>
-                  {/* <NextLink href="/diagnose" passHref>
+                  {/* <Link href="/diagnose" passHref>
                     <p className="hover:text-teal-600 hover:underline cursor-pointer">
                       Diagnose Now
                     </p>
-                  </NextLink> */}
-                  <Link href="/dashboard">
+                  </Link> */}
+                  <a href="/dashboard">
                     <p className="hover:text-teal-600 hover:underline cursor-pointer">
                       Dashboard
                     </p>
-                  </Link>
+                  </a>
                   {user ? (
                     <button onClick={logout} className="rounded-md bg-secondary-500 px-10 py-2 hover:bg-yellow-300 hover:text-white transition duration-300">
                       Logout
                     </button>
                   ) : (
-                    <NextLink href={"/login"} className="rounded-md bg-secondary-500 px-10 py-2 hover:bg-yellow-300 hover:text-white transition duration-300">
+                    <a href={"/login"} className="rounded-md bg-secondary-500 px-10 py-2 hover:bg-yellow-300 hover:text-white transition duration-300">
                       Login
-                    </NextLink>
+                    </a>
                   )}
                 </div>
               </div>
@@ -122,22 +121,22 @@ const Navbar = ({ isTopOfPage, selectedPage, setSelectedPage }: Props) => {
                   isTopOfPage={isTopOfPage}
                 />
               ))}
-              <Link href="/dashboard">
+              <a href="/dashboard">
                 <p
                   onClick={() => setIsMenuToggled(false)}
                   className="hover:text-teal-600 underline cursor-pointer"
                 >
                   Dashboard
                 </p>
-              </Link>
+              </a>
               {user ? (
                 <button onClick={logout} className="rounded-md bg-secondary-500 px-10 py-2 hover:bg-yellow-300 hover:text-white transition duration-300">
                   Logout
                 </button>
               ) : (
-                <NextLink href={"/login"} className="rounded-md bg-secondary-500 px-10 py-2 hover:bg-yellow-300 hover:text-white transition duration-300">
+                <a href={"/login"} className="rounded-md bg-secondary-500 px-10 py-2 hover:bg-yellow-300 hover:text-white transition duration-300">
                   Login
-                </NextLink>
+                </a>
               )}
             </div>
           </motion.div>
