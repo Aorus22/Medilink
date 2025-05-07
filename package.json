@@ -3,14 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "bun server.ts",
     "build": "next build",
-    "start": "next start",
-    "ws": "bun --watch websocket/server.ts",
-    "dev:all": "concurrently \"next dev --turbopack\" \"bun run ws\"",
-    "start:all": "concurrently \"next start\" \"bun websocket/server.ts\"",
-    "lint": "next lint",
-    "seed": "bun prisma/seed.ts"
+    "start": "NODE_ENV=production bun server.ts",
+    "lint": "next lint"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

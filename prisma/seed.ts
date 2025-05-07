@@ -10,7 +10,10 @@ function hashed(password: string) {
 }
 
 async function main() {
+  await prisma.practiceHour.deleteMany();
+  await prisma.historicalData.deleteMany();
   await prisma.appointment.deleteMany();
+  await prisma.message.deleteMany();
   await prisma.user.deleteMany();
   await prisma.doctor.deleteMany();
 

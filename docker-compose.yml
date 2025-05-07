@@ -13,15 +13,13 @@ services:
       - medilink-pgdata:/var/lib/postgresql/data
 
   app:
-    image: aorus22/medilink:latest
+    image: test
     container_name: medilink-app
     restart: always
     environment:
       DATABASE_URL: "postgresql://medilink_user:medilink_password@postgres:5432/medilinkdb?schema=public"
-      WS_SERVER_URL: "ws://localhost:7673"
     ports:
       - 7672:3000 # Next JS
-      - 7673:7673 # Websocket
     depends_on:
       - postgres
 

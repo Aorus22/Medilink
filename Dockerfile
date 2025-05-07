@@ -18,15 +18,17 @@ RUN bun run build
 FROM oven/bun:alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 EXPOSE 3000 7673
 
-RUN bun add concurrently prisma
+RUN bun add @prisma/client
 
 COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/node_modules/next ./node_modules/next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/websocket ./websocket
+COPY --from=builder /app/server.ts ./server.ts
 
-CMD ["bun", "run", "concurrently", "bun ./server.js", "bun websocket/server.ts"]
+CMD ["bun", "server.ts"]

@@ -58,11 +58,15 @@ export default function HealthcareMonitoringPage() {
   useEffect(() => {
     const connectWebSocket = async () => {
       try {
-        const res = await fetch("/api/ws");
-        if (!res.ok) throw new Error("Failed to fetch WebSocket URL");
-        const { url } = await res.json();
+        // const res = await fetch("/api/ws");
+        // if (!res.ok) throw new Error("Failed to fetch WebSocket URL");
+        // const { url } = await res.json();
 
-        const ws = new WebSocket(url);
+        const isSecure = window.location.protocol === 'https:';
+        const wsProtocol = isSecure ? 'wss' : 'ws';
+        const wsUrl = `${wsProtocol}://${window.location.host}/api/ws`;
+
+        const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
           console.log("WebSocket connected");
