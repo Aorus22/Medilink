@@ -34,8 +34,9 @@ const Footer = () => {
       <div className="px-16 pb-10">
         <p>© MedLink Smart All Rights Reserved.</p>
         <p className="mt-2 font-bold">Sponsorship</p>
-        <div>
+        <div className="flex gap-4">
           <img className="h-12" src={"/assets/dynatech logo.png"}/>
+          <img className="h-12" src={"/assets/ptskajaya.png"}/>
         </div>
       </div>
     </footer>
