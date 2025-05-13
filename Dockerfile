@@ -19,7 +19,7 @@ FROM oven/bun:alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-EXPOSE 3000 7673
+EXPOSE 3000
 
 RUN bun add @prisma/client
 

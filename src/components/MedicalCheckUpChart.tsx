@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -37,6 +37,7 @@ interface MedicalCheckupChartProps {
 
 const MedicalCheckupChart: React.FC<MedicalCheckupChartProps> = ({ data }) => {
   const parameters = ["Temperature", "Blood Pressure", "Heart Rate", "SPO2"];
+
   const dates = useMemo(
     () =>
       Array.from(
@@ -86,6 +87,7 @@ const MedicalCheckupChart: React.FC<MedicalCheckupChartProps> = ({ data }) => {
 
   const getOptions = (parameter: string, unit: string) => ({
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         display: false,
@@ -93,6 +95,9 @@ const MedicalCheckupChart: React.FC<MedicalCheckupChartProps> = ({ data }) => {
       title: {
         display: true,
         text: `${parameter} Trend`,
+        font: {
+          size: 14,
+        }
       },
       tooltip: {
         callbacks: {
@@ -108,14 +113,32 @@ const MedicalCheckupChart: React.FC<MedicalCheckupChartProps> = ({ data }) => {
         beginAtZero: false,
         title: {
           display: true,
-          text: `Value (${unit})`,
+          text: `${unit}`,
+          font: {
+            size: 12,
+          }
         },
+        ticks: {
+          font: {
+            size: 10,
+          }
+        }
       },
       x: {
         title: {
           display: true,
           text: "Date",
+          font: {
+            size: 12,
+          }
         },
+        ticks: {
+          maxRotation: 45,
+          minRotation: 45,
+          font: {
+            size: 10,
+          }
+        }
       },
     },
   });
@@ -129,19 +152,22 @@ const MedicalCheckupChart: React.FC<MedicalCheckupChartProps> = ({ data }) => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 gap-4">
       {parameters.map((parameter) => {
         const parameterData = data.filter((item) => item.parameter === parameter);
-        if (parameterData.length === 0) return null; // Skip if no data for this parameter
+        if (parameterData.length === 0) return null;
+
         return (
           <div
             key={parameter}
-            className="bg-white rounded-lg shadow p-6"
+            className="bg-white rounded-lg shadow p-4"
           >
-            <Line
-              data={getChartData(parameter)}
-              options={getOptions(parameter, unitMap[parameter])}
-            />
+            <div className="h-64">
+              <Line
+                data={getChartData(parameter)}
+                options={getOptions(parameter, unitMap[parameter])}
+              />
+            </div>
           </div>
         );
       })}

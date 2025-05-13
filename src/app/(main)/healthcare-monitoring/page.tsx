@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { HistoricalData } from "#/prisma/db";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import MedicalCheckupChart from "@/components/MedicalCheckUpChart";
 
@@ -11,6 +11,15 @@ export default function HealthcareMonitoringPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [loadingSend, setLoadingSend] = useState(false);
+  const [wsStatus, setWsStatus] = useState<"connecting" | "connected" | "disconnected">("connecting");
+  const [sensorData, setSensorData] = useState([
+    { name: "Temperature", value: "", unit: "°C" },
+    { name: "Blood Pressure", value: "", unit: "mmHg" },
+    { name: "Heart Rate", value: "", unit: "BPM" },
+    { name: "SPO2", value: "", unit: "%" },
+  ]);
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     const fetchHistoricalData = async () => {
@@ -41,71 +50,90 @@ export default function HealthcareMonitoringPage() {
     });
   };
 
-  // const vitalSigns = [
-  //   { name: "Temperature", value: "37.5", unit: "°C" },
-  //   { name: "Blood Pressure", value: "120/80", unit: "mmHg" },
-  //   { name: "Heart Rate", value: "78", unit: "BPM" },
-  //   { name: "SPO2", value: "98", unit: "%" },
-  // ];
-
-  const [vitalSigns, setVitalSigns] = useState([
-    { name: "Temperature", value: "37.5", unit: "°C" },
-    { name: "Blood Pressure", value: "120/80", unit: "mmHg" },
-    { name: "Heart Rate", value: "78", unit: "BPM" },
-    { name: "SPO2", value: "98", unit: "%" },
-  ]);
-
   useEffect(() => {
-    const connectWebSocket = async () => {
-      try {
-        // const res = await fetch("/api/ws");
-        // if (!res.ok) throw new Error("Failed to fetch WebSocket URL");
-        // const { url } = await res.json();
+    let timeout: NodeJS.Timeout;
+    let reconnectInterval: NodeJS.Timeout | null = null;
 
-        const isSecure = window.location.protocol === 'https:';
-        const wsProtocol = isSecure ? 'wss' : 'ws';
-        const wsUrl = `${wsProtocol}://${window.location.host}/api/ws`;
+    const connectWebSocket = () => {
+      setWsStatus("connecting");
 
-        const ws = new WebSocket(wsUrl);
+      const isSecure = window.location.protocol === "https:";
+      const wsProtocol = isSecure ? "wss" : "ws";
+      const wsUrl = `${wsProtocol}://${window.location.host}/api/ws`;
 
-        ws.onopen = () => {
-          console.log("WebSocket connected");
-        };
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
 
-        ws.onmessage = (event) => {
-          try {
-            const msg = JSON.parse(event.data);
-            if (msg.type === "sensor_data" && msg.data) {
-              const { temperature, spo2, heartrate, blood_pressure } = msg.data;
+      timeout = setTimeout(() => {
+        if (ws.readyState !== WebSocket.OPEN) {
+          ws.close();
+        }
+      }, 5000);
 
-              const newSigns = [
-                { name: "Temperature", value: temperature || "--", unit: "°C" },
-                { name: "Blood Pressure", value: blood_pressure || "--", unit: "mmHg" },
-                { name: "Heart Rate", value: heartrate || "--", unit: "BPM" },
-                { name: "SPO2", value: spo2 || "--", unit: "%" },
-              ];
+      ws.onopen = () => {
+        clearTimeout(timeout);
+        setWsStatus("connected");
+      };
 
-              setVitalSigns(newSigns);
-            }
-          } catch (err) {
-            console.error("WebSocket parsing error", err);
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+
+          if (msg.type === "sensor_data" && Array.isArray(msg.data?.sensors)) {
+            const sensors = msg.data.sensors;
+
+            const getSensorValue = (name: string) => {
+              const sensor = sensors.find((s: any) => s.name === name);
+              return sensor ? { value: sensor.value, unit: sensor.unit } : { value: "", unit: "" };
+            };
+
+            const newSigns = [
+              { name: "Temperature", ...getSensorValue("Temperature") },
+              { name: "Blood Pressure", ...getSensorValue("Blood Pressure") },
+              { name: "Heart Rate", ...getSensorValue("Heart Rate") },
+              { name: "SPO2", ...getSensorValue("SPO2") },
+            ];
+
+            setSensorData(newSigns);
           }
-        };
+        } catch {}
+      };
 
-        return () => ws.close();
-      } catch (error) {
-        console.error("Failed to connect to WebSocket:", error);
-      }
+      ws.onerror = () => {
+        ws.close();
+      };
+
+      ws.onclose = () => {
+        clearTimeout(timeout);
+        setWsStatus("disconnected");
+
+        reconnectInterval = setTimeout(() => {
+          connectWebSocket();
+        }, 5000);
+      };
     };
 
+    reconnectRef.current = connectWebSocket;
     connectWebSocket();
+
+    return () => {
+      clearTimeout(timeout);
+      if (reconnectInterval) clearTimeout(reconnectInterval);
+      wsRef.current?.close();
+    };
   }, []);
 
 
   const handleSend = async () => {
+    const hasEmptyValue = sensorData.some((sign) => sign.value.trim() === "");
+    if (hasEmptyValue) {
+      toast.error("Sensor Data is not complete");
+      return;
+    }
+
     try {
       setLoadingSend(true);
-      const payload = vitalSigns.map((sign) => ({
+      const payload = sensorData.map((sign) => ({
         parameter: sign.name,
         value: sign.value,
         unit: sign.unit,
@@ -182,24 +210,41 @@ export default function HealthcareMonitoringPage() {
 
             {/* Current Vital Signs */}
             <div className="flex flex-col w-full border rounded-xl shadow-sm">
-              <div className="h-[50px] flex items-center bg-teal-50 rounded-t-xl">
-                <p className="pl-5 text-xl font-semibold text-teal-800">
-                  Current Vital Signs
-                </p>
+              <div className="h-[50px] w-full flex items-center bg-teal-50 rounded-t-xl">
+                <div className="px-5 flex w-full items-center justify-between text-xl font-semibold text-teal-800">
+                  <span>Sensor Data</span>
+                  <div>
+                    {wsStatus === "connecting" && (
+                      <span className="text-sm text-gray-500">connecting...</span>
+                    )}
+                    {wsStatus === "connected" && (
+                      <span className="text-sm text-gray-500">connected</span>
+                    )}
+                    {wsStatus === "disconnected" && (
+                      <button
+                        onClick={() => reconnectRef.current?.()}
+                        className="text-sm text-red-500 underline"
+                      >
+                        Reconnect
+                      </button>
+                    )}
+                  </div>
+                </div>
+
               </div>
               <div className="flex flex-wrap w-full p-5">
-                {vitalSigns.map((sign, index) => (
+                {sensorData.map((data, index) => (
                   <div
                     key={index}
                     className="flex-1 flex flex-col items-center justify-center gap-2 py-6 min-w-[150px]"
                   >
                     <p className="text-lg font-medium text-teal-800">
-                      {sign.name}
+                      {data.name}
                     </p>
                     <p className="text-4xl font-bold text-teal-800">
-                      {sign.value}
+                      {data.value === "" ? "--" : data.value}
                     </p>
-                    <p className="text-sm">{sign.unit}</p>
+                    <p className="text-sm">{data.unit}</p>
                   </div>
                 ))}
               </div>

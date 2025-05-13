@@ -6,8 +6,8 @@ import Rightbar from './rightbar';
 import Sidebar from './sidebar';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  const [rightbarOpen, setRightbarOpen] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [rightbarOpen, setRightbarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {

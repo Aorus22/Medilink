@@ -13,7 +13,7 @@ services:
       - medilink-pgdata:/var/lib/postgresql/data
 
   app:
-    image: test
+    image: aorus22/medilink:latest
     container_name: medilink-app
     restart: always
     environment:

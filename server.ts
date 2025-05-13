@@ -1,7 +1,7 @@
 import { createServer } from 'http';
 import { parse } from 'url';
 import next from 'next';
-import { setupWebSocketOnUpgrade } from './websocket/wsController';
+import { handlePostSensorData, setupWebSocketOnUpgrade } from './websocket/wsController';
 
 const port = parseInt(process.env.PORT || '3000', 10);
 const dev = process.env.NODE_ENV !== 'production';
@@ -12,9 +12,12 @@ app.prepare().then(() => {
   const server = createServer((req, res) => {
     const parsedUrl = parse(req.url!, true);
 
-    if (parsedUrl.pathname === "/api/ws") {
+    if (parsedUrl.pathname === '/api/ws') {
       res.writeHead(426, { 'Content-Type': 'text/plain' });
       res.end('Upgrade required for WebSocket');
+    } else if (parsedUrl.pathname === '/api/send-sensor-data') {
+      handlePostSensorData(req, res);
+      return;
     } else {
       handle(req, res, parsedUrl);
     }
