@@ -17,12 +17,15 @@ datasource db {
 model User {
   id           Int            @id @default(autoincrement())
   username     String         @unique
+  email        String         @unique
   password     String
   name         String
-  birthdate    DateTime
-  address      String
-  profession   String
-  religion     String
+  gender       String
+  major        String
+  studentId    String
+  birthPlace   String
+  birthDate    DateTime
+  phoneNumber  String
   avatar       String
 
   messages Message[] @relation("UserMessages")

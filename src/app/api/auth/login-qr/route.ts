@@ -9,9 +9,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
 
 type Role = 'USER' | 'ADMIN';
 
-const setAuthCookie = async (user: { id: number; username: string }, role: Role) => {
+const setAuthCookie = async (user: { id: number; email: string }, role: Role) => {
   const token = jwt.sign(
-    { userId: user.id, username: user.username, role },
+    { userId: user.id, email: user.email, role },
     JWT_SECRET,
     { expiresIn: '1h' }
   );
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid QR code' }, { status: 404 });
     }
 
-    const role = user.username === 'admin' ? 'ADMIN' : 'USER';
+    const role = user.email === 'admin@ums.ac.id' ? 'ADMIN' : 'USER';
     const token = await setAuthCookie(user, role);
 
     return NextResponse.json(
@@ -54,14 +54,15 @@ export async function POST(req: NextRequest) {
         message: 'QR Login successful',
         user: {
           id: user.id,
-          username: user.username,
+          email: user.email,
           name: user.name,
-          birthdate: user.birthdate,
-          religion: user.religion,
-          address: user.address,
-          avatar: user.avatar,
-          profession: user.profession,
-          role: 'USER',
+          gender: user.gender,
+          major: user.major,
+          studentId: user.studentId,
+          birthPlace: user.birthPlace,
+          birthDate: user.birthDate,
+          phoneNumber: user.phoneNumber,
+          role: role,
         },
         token,
       },

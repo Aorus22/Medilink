@@ -5,12 +5,15 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 export type UserData = {
   id: number;
   username: string;
+  email: string;
   name: string;
-  birthdate: string;
-  religion: string;
-  address: string;
+  birthPlace: string;
+  birthDate: string;
+  gender: string;
+  major: string;
+  studentId: string;
   avatar: string;
-  profession: string;
+  phoneNumber: string;
 };
 
 type AuthContextType = {

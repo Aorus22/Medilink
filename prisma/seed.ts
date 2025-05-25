@@ -11,53 +11,41 @@ function hashed(password: string) {
 
 async function main() {
   await prisma.practiceHour.deleteMany();
-  await prisma.historicalData.deleteMany();
-  await prisma.appointment.deleteMany();
   await prisma.message.deleteMany();
+  await prisma.appointment.deleteMany();
+  await prisma.historicalData.deleteMany();
+  await prisma.pharmacy.deleteMany();
+  await prisma.mriTest.deleteMany();
+  await prisma.urineTest.deleteMany();
+  await prisma.bloodTest.deleteMany();
   await prisma.user.deleteMany();
   await prisma.doctor.deleteMany();
 
   const doctors = await prisma.doctor.createMany({
     data: [
       {
+        about: "A cardiologist with extensive experience in heart conditions.",
         name: "Dr. Amanda Wilson",
-        specialist: "Cardiologist",
-        about: "Experienced cardiologist.",
-        education: "MD, Stanford Medical School",
-        experience: "15 years",
-        location: "Medic Room 1"
-      },
-      {
-        name: "Dr. James Rodriguez",
-        specialist: "Neurologist",
-        about: "Expert in neurological disorders.",
-        education: "MD, NYU School of Medicine",
-        experience: "10 years",
-        location: "Medic Room 1"
-      },
-      {
-        about: "A cardiologist with over 10 years of experience in the field.",
-        name: "Dr. John Doe",
         specialist: "Cardiology",
-        experience: "10 years",
+        experience: "15 years",
         education: "MD, Harvard Medical School",
         location: "Medic Room 1"
       },
       {
-        about: "An orthopedic surgeon specializing in bone and joint cases.",
-        name: "Dr. Jane Smith",
-        specialist: "Orthopedic Surgery",
-        experience: "8 years",
-        education: "MD, Johns Hopkins School of Medicine",
-        location: "Medic Room 1"
+        about: "A pediatrician specializing in child development.",
+        name: "Dr. Michael Chen",
+        specialist: "Pediatrics",
+        experience: "10 years",
+        education: "MD, Stanford University",
+        location: "Medic Room 2"
       },
       {
-        about: "A general practitioner focusing on disease prevention and public health.",
-        name: "Dr. Michael Brown",
-        specialist: "General Medicine",
-        experience: "5 years",
-        education: "MD, University of California, San Francisco",
-        location: "Medic Room 1"
+        about: "A neurologist with expertise in brain disorders.",
+        name: "Dr. Sarah Johnson",
+        specialist: "Neurology",
+        experience: "12 years",
+        education: "MD, Johns Hopkins University",
+        location: "Medic Room 3"
       },
       {
         about: "An internist with experience in managing chronic diseases.",
@@ -75,52 +63,38 @@ async function main() {
   const users = await prisma.user.createMany({
     data: [
       {
+        email: "d200220069@student.ums.ac.id",
         username: "marko123",
         password: hashed("passwordUser1"),
-        name: "Marko",
-        birthdate: new Date("1990-01-01"),
-        address: "Jakarta",
-        profession: "Engineer",
-        religion: "Islam",
-        avatar: "",
+        name: "Marko Refianto",
+        gender: "Male",
+        major: "Mechanical Engineering",
+        studentId: "D200220069",
+        birthPlace: "Jakarta",
+        birthDate: new Date("2004-04-14"),
+        phoneNumber: "089699521932",
+        avatar: ""
       },
       {
-        username: "muhammadalexander",
+        email: "d200220015@student.ums.ac.id",
+        username: "adityo123",
         password: hashed("passwordUser2"),
-        name: "Muhammad Alexander",
-        birthdate: new Date("2003-03-03"),
-        address: "Surakarta",
-        profession: "Engineer",
-        religion: "Islam",
-        avatar: "",
-      },
-      {
-        username: "alyza28",
-        password: hashed("passwordUser3"),
-        name: "Alyza",
-        birthdate: new Date("1998-08-28"),
-        address: "Karanganyar",
-        profession: "Designer",
-        religion: "Islam",
-        avatar: "",
-      },
-      {
-        username: "rafael99",
-        password: hashed("passwordUser4"),
-        name: "Rafael",
-        birthdate: new Date("1999-05-05"),
-        address: "Solo",
-        profession: "Developer",
-        religion: "Christian",
-        avatar: "",
-      },
+        name: "Muhamamd Adityo Rivalta",
+        gender: "Male",
+        major: "Mechanical Engineering",
+        studentId: "D200220015",
+        birthPlace: "Wonogiri",
+        birthDate: new Date("2002-02-18"),
+        phoneNumber: "085156346402",
+        avatar: ""
+      }
     ],
   });
 
-  console.log("User added:", users);
+  console.log("Users added:", users);
 
   const doctor1 = await prisma.doctor.findFirst({ where: { name: "Dr. Amanda Wilson" } });
-  const user = await prisma.user.findFirst({ where: { name: "Marko" } });
+  const user = await prisma.user.findFirst({ where: { name: "Marko Refianto" } });
 
   const messages = await prisma.message.createMany({
     data: [
@@ -173,64 +147,10 @@ async function main() {
         doctorId: doctor1.id,
         time: new Date("2024-05-01T09:43:00"),
       },
-      {
-        sender: "DOCTOR",
-        content: "Please let me know if you have any questions about your medication.",
-        userId: user.id,
-        doctorId: doctor1.id,
-        time: new Date("2024-05-01T09:45:00"),
-      }
-    ]
-  });
-
-  console.log("Messages added:", messages);
-
-  const appointments = await prisma.appointment.createMany({
-    data: [
-      {
-        date: new Date("2024-04-15T10:00:00"),
-        confirmTime: new Date("2024-04-14T10:00:00"),
-        status: "confirmed",
-        queueNum: 1,
-        purpose: "Initial cardiac consultation",
-        information: "Patient reported occasional chest pain and shortness of breath.",
-        userId: user.id,
-        doctorId: doctor1.id,
-      },
-      {
-        date: new Date("2024-04-14T10:00:00"),
-        confirmTime: new Date("2024-04-14T14:00:00"),
-        queueNum: 1,
-        purpose: "Follow-up appointment",
-        information: "Review of initial medication and symptoms progress.",
-        status: "confirmed",
-        userId: user.id,
-        doctorId: doctor1.id,
-      },
-      {
-        date: new Date("2024-04-13T10:00:00"),
-        confirmTime: new Date("2024-04-14T14:00:00"),
-        queueNum: 1,
-        purpose: "Routine check-up",
-        information: "Patient has been experiencing chest pain occasionally.",
-        status: "confirmed",
-        userId: user.id,
-        doctorId: doctor1.id,
-      },
-      {
-        date: new Date("2025-04-14T10:00:00"),
-        confirmTime: new Date("2025-07-15T10:00:00"),
-        queueNum: 1,
-        purpose: "Initial cardiac consultation",
-        information: "Patient reported occasional chest pain and shortness of breath.",
-        status: "confirmed",
-        userId: user.id,
-        doctorId: doctor1.id,
-      },
     ],
   });
 
-  console.log("Appointments created:", appointments);
+  console.log("Messages added:", messages);
 
   const historicalData = await prisma.historicalData.createMany({
     data: [
@@ -275,7 +195,7 @@ async function main() {
         userId: user.id,
       }
     ]
-  })
+  });
 
   console.log("Historical Data created:", historicalData);
 
@@ -307,7 +227,6 @@ async function main() {
   });
 
   console.log("practiceHour added:", practiceHour);
-
 }
 
 main()

@@ -9,59 +9,66 @@ function hashed(password: string) {
   return bcrypt.hashSync(password, saltRounds);
 }
 
-
 export async function POST(req: NextRequest) {
   try {
     const {
+      email,
       username,
       password,
       name,
-      birthdate,
-      address,
-      profession,
-      religion,
-      avatar,
+      gender,
+      major,
+      studentId,
+      birthPlace,
+      birthDate,
+      phoneNumber,
     } = await req.json();
 
-    if (!username || !password || !name) {
+    if (!email || !username || !password || !name || !gender || !major || !studentId || !birthPlace || !birthDate || !phoneNumber) {
       return NextResponse.json(
-        { error: 'Username, password, and name are required' },
+        { error: 'All fields are required' },
         { status: 400 }
       );
     }
 
-    const existingUser = await prisma.user.findUnique({
+    // Check for existing username
+    const existingUserByUsername = await prisma.user.findUnique({
       where: { username },
     });
 
-    if (existingUser) {
+    if (existingUserByUsername) {
       return NextResponse.json(
-        { error: 'Username already exists' },
+        { error: 'Username already taken' },
+        { status: 409 }
+      );
+    }
+
+    // Check for existing email
+    const existingUserByEmail = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUserByEmail) {
+      return NextResponse.json(
+        { error: 'Email already taken' },
         { status: 409 }
       );
     }
 
     const newUser = await prisma.user.create({
       data: {
+        email,
         username,
-        password: hashed("passwordUser1"),
+        password: hashed(password),
         name,
-        birthdate: new Date(birthdate),
-        address,
-        profession,
-        religion,
-        avatar: "",
+        gender,
+        major,
+        studentId,
+        birthPlace,
+        birthDate: new Date(birthDate),
+        phoneNumber,
+        avatar: ""
       },
-      // {
-      //   username,
-      //   password: hashedPassword,
-      //   name,
-      //   birthdate: new Date(birthdate),
-      //   address: address || "",
-      //   profession: profession || "",
-      //   religion: religion || "",
-      //   avatar: avatar || "",
-      // },
     });
 
     return NextResponse.json(
@@ -69,13 +76,14 @@ export async function POST(req: NextRequest) {
         message: 'Registration successful',
         user: {
           id: newUser.id,
-          username: newUser.username,
+          email: newUser.email,
           name: newUser.name,
-          birthdate: newUser.birthdate,
-          address: newUser.address,
-          profession: newUser.profession,
-          religion: newUser.religion,
-          avatar: newUser.avatar,
+          gender: newUser.gender,
+          major: newUser.major,
+          studentId: newUser.studentId,
+          birthPlace: newUser.birthPlace,
+          birthDate: newUser.birthDate,
+          phoneNumber: newUser.phoneNumber,
           role: 'USER',
         },
       },

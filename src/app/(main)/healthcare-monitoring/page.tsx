@@ -192,18 +192,23 @@ export default function HealthcareMonitoringPage() {
                   <span className="font-medium">Name:</span> {user?.name}
                 </p>
                 <p>
+                  <span className="font-medium">Student ID:</span> {user?.studentId}
+                </p>
+                <p>
+                  <span className="font-medium">Major:</span> {user?.major}
+                </p>
+                <p>
+                  <span className="font-medium">Gender:</span> {user?.gender}
+                </p>
+                <p>
+                  <span className="font-medium">Birth Place:</span> {user?.birthPlace}
+                </p>
+                <p>
                   <span className="font-medium">Birth Date:</span>{" "}
-                  {user?.birthdate ? formatDate(user.birthdate) : "N/A"}
+                  {user?.birthDate ? formatDate(user.birthDate) : "N/A"}
                 </p>
                 <p>
-                  <span className="font-medium">Location:</span> {user?.address}
-                </p>
-                <p>
-                  <span className="font-medium">Profession:</span>{" "}
-                  {user?.profession}
-                </p>
-                <p>
-                  <span className="font-medium">Religion:</span> {user?.religion}
+                  <span className="font-medium">Phone Number:</span> {user?.phoneNumber}
                 </p>
               </div>
             </div>

@@ -7,14 +7,17 @@ import { useRouter } from 'next/navigation';
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
+    email: '',
     username: '',
     password: '',
     confirmPassword: '',
     name: '',
-    birthdate: '',
-    religion: '',
-    address: '',
-    profession: ''
+    gender: '',
+    major: '',
+    studentId: '',
+    birthPlace: '',
+    birthDate: '',
+    phoneNumber: ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -29,8 +32,13 @@ export default function SignupPage() {
   };
 
   const validateStep1 = () => {
-    if (!formData.username || !formData.password || !formData.confirmPassword) {
+    if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
       toast.warn('Please fill all required fields')
+      return false;
+    }
+
+    if (!formData.email.includes('@')) {
+      toast.warn('Please enter a valid email address');
       return false;
     }
 
@@ -48,7 +56,7 @@ export default function SignupPage() {
   };
 
   const validateStep2 = () => {
-    if (!formData.name || !formData.birthdate || !formData.religion) {
+    if (!formData.name || !formData.gender || !formData.major || !formData.studentId) {
       toast.warn('Please fill all required fields')
       return false;
     }
@@ -68,7 +76,7 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.address || !formData.profession) {
+    if (!formData.birthPlace || !formData.birthDate || !formData.phoneNumber) {
       toast.warn('Please fill all required fields')
       return;
     }
@@ -85,10 +93,7 @@ export default function SignupPage() {
     }
   };
 
-  const religions = [
-    'Islam', 'Christianity', 'Catholicism',
-    'Hinduism', 'Buddhism', 'Confucianism', 'Other'
-  ];
+  const genders = ['Male', 'Female'];
 
   const renderStepIndicator = () => (
     <div className="flex items-center justify-center mb-6">
@@ -114,16 +119,32 @@ export default function SignupPage() {
       <h2 className="text-xl font-semibold mb-4 text-center">Account Details</h2>
       <div className="space-y-4">
         <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Email<span className="text-red-500">*</span></label>
+          <div className="relative">
+            <i className="bi bi-envelope-fill absolute left-3 top-1/2 -translate-y-1/2 text-teal-500"></i>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full pl-9 pr-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300"
+              placeholder="Enter your email"
+              required
+            />
+          </div>
+        </div>
+
+        <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Username<span className="text-red-500">*</span></label>
           <div className="relative">
-            <i className="bi bi-person-fill absolute left-3 top-1/2 -translate-y-1/2 text-teal-500"></i>
+            <i className="bi bi-envelope-fill absolute left-3 top-1/2 -translate-y-1/2 text-teal-500"></i>
             <input
-              type="text"
+              type="username"
               name="username"
               value={formData.username}
               onChange={handleChange}
               className="w-full pl-9 pr-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300"
-              placeholder="Choose a username"
+              placeholder="Enter your username"
               required
             />
           </div>
@@ -138,7 +159,7 @@ export default function SignupPage() {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className={`w-full pl-9 pr-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300`}
+              className="w-full pl-9 pr-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300"
               placeholder="Create a password (min. 8 characters)"
               required
             />
@@ -154,7 +175,7 @@ export default function SignupPage() {
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
-              className={`w-full pl-9 pr-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300`}
+              className="w-full pl-9 pr-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300"
               placeholder="Confirm your password"
               required
             />
@@ -185,36 +206,53 @@ export default function SignupPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Birth Date<span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Gender<span className="text-red-500">*</span></label>
           <div className="relative">
-            <i className="bi bi-calendar-date absolute left-3 top-1/2 -translate-y-1/2 text-teal-500"></i>
+            <i className="bi bi-gender-ambiguous absolute left-3 top-1/2 -translate-y-1/2 text-teal-500"></i>
+            <select
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              className="w-full pl-9 pr-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300 bg-white"
+              required
+            >
+              <option value="" disabled>Select your gender</option>
+              {genders.map(gender => (
+                <option key={gender} value={gender}>{gender}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Major<span className="text-red-500">*</span></label>
+          <div className="relative">
+            <i className="bi bi-book absolute left-3 top-1/2 -translate-y-1/2 text-teal-500"></i>
             <input
-              type="date"
-              name="birthdate"
-              value={formData.birthdate}
+              type="text"
+              name="major"
+              value={formData.major}
               onChange={handleChange}
               className="w-full pl-9 pr-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300"
+              placeholder="Enter your major"
               required
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Religion<span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Student ID<span className="text-red-500">*</span></label>
           <div className="relative">
-            <i className="bi bi-book absolute left-3 top-1/2 -translate-y-1/2 text-teal-500"></i>
-            <select
-              name="religion"
-              value={formData.religion}
+            <i className="bi bi-card-text absolute left-3 top-1/2 -translate-y-1/2 text-teal-500"></i>
+            <input
+              type="text"
+              name="studentId"
+              value={formData.studentId}
               onChange={handleChange}
-              className="w-full pl-9 pr-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300 bg-white"
+              className="w-full pl-9 pr-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300"
+              placeholder="Enter your student ID"
               required
-            >
-              <option value="" disabled>Select your religion</option>
-              {religions.map(religion => (
-                <option key={religion} value={religion}>{religion}</option>
-              ))}
-            </select>
+            />
           </div>
         </div>
       </div>
@@ -226,32 +264,47 @@ export default function SignupPage() {
       <h2 className="text-xl font-semibold mb-4 text-center">Additional Information</h2>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Address<span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Birth Place<span className="text-red-500">*</span></label>
           <div className="relative">
-            <i className="bi bi-geo-alt absolute left-3 top-3 text-teal-500"></i>
-            <textarea
-              name="address"
-              value={formData.address}
+            <i className="bi bi-geo-alt absolute left-3 top-1/2 -translate-y-1/2 text-teal-500"></i>
+            <input
+              type="text"
+              name="birthPlace"
+              value={formData.birthPlace}
               onChange={handleChange}
               className="w-full pl-9 pr-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300"
-              placeholder="Enter your address"
-              rows={3}
+              placeholder="Enter your birth place"
               required
-            ></textarea>
+            />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Profession<span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Birth Date<span className="text-red-500">*</span></label>
           <div className="relative">
-            <i className="bi bi-briefcase absolute left-3 top-1/2 -translate-y-1/2 text-teal-500"></i>
+            <i className="bi bi-calendar-date absolute left-3 top-1/2 -translate-y-1/2 text-teal-500"></i>
             <input
-              type="text"
-              name="profession"
-              value={formData.profession}
+              type="date"
+              name="birthDate"
+              value={formData.birthDate}
               onChange={handleChange}
               className="w-full pl-9 pr-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300"
-              placeholder="Enter your profession"
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number<span className="text-red-500">*</span></label>
+          <div className="relative">
+            <i className="bi bi-telephone-fill absolute left-3 top-1/2 -translate-y-1/2 text-teal-500"></i>
+            <input
+              type="tel"
+              name="phoneNumber"
+              value={formData.phoneNumber}
+              onChange={handleChange}
+              className="w-full pl-9 pr-4 py-2 border-2 border-gray-300 rounded-lg text-sm focus:outline-none focus:border-teal-500 transition duration-300"
+              placeholder="Enter your phone number"
               required
             />
           </div>
@@ -290,7 +343,7 @@ export default function SignupPage() {
             </div>
           )}
 
-          <div className={`flex gap-2 justify-end mt-6`}>
+          <div className="flex justify-between mt-6">
             {step > 1 && (
               <button
                 type="button"

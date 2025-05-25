@@ -9,7 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
 
 type Role = 'USER' | 'ADMIN';
 
-const setAuthCookie = async (user: { id: number; username: string }, role: Role) => {
+const setAuthCookie = async (user: any, role: Role) => {
   const token = jwt.sign(
     { userId: user.id, username: user.username, role },
     JWT_SECRET,
@@ -37,13 +37,15 @@ export async function POST(req: NextRequest) {
       const adminUser = {
         id: 999999, // Special ID for hardcoded admin
         username: 'admin',
+        email: 'admin@admin.com',
         name: 'Administrator',
         role: 'ADMIN',
-        birthdate: null,
-        religion: null,
-        address: null,
-        avatar: null,
-        profession: null,
+        gender: null,
+        major: null,
+        studentId: null,
+        birthPlace: null,
+        birthDate: null,
+        phoneNumber: null,
       };
 
       const token = await setAuthCookie(adminUser, 'ADMIN');
@@ -79,12 +81,14 @@ export async function POST(req: NextRequest) {
         user: {
           id: user.id,
           username: user.username,
+          email: user.email,
           name: user.name,
-          birthdate: user.birthdate,
-          religion: user.religion,
-          address: user.address,
-          avatar: user.avatar,
-          profession: user.profession,
+          gender: user.gender,
+          major: user.major,
+          studentId: user.studentId,
+          birthPlace: user.birthPlace,
+          birthDate: user.birthDate,
+          phoneNumber: user.phoneNumber,
           role: 'USER',
         },
         token,

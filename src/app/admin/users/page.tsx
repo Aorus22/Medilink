@@ -173,20 +173,28 @@ export default function AdminUsersPage() {
                 <div className="col-span-2 md:col-span-1">
                   <div className="space-y-3">
                     <div>
-                      <label className="text-xs text-gray-500">Profession</label>
-                      <p className="font-medium">{user.profession}</p>
+                      <label className="text-xs text-gray-500">Student ID</label>
+                      <p className="font-medium">{user.studentId}</p>
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500">Date of Birth</label>
-                      <p className="font-medium">{formatDate(user.birthdate)}</p>
+                      <label className="text-xs text-gray-500">Major</label>
+                      <p className="font-medium">{user.major}</p>
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500">Religion</label>
-                      <p className="font-medium">{user.religion}</p>
+                      <label className="text-xs text-gray-500">Gender</label>
+                      <p className="font-medium">{user.gender}</p>
                     </div>
                     <div>
-                      <label className="text-xs text-gray-500">Address</label>
-                      <p className="font-medium">{user.address}</p>
+                      <label className="text-xs text-gray-500">Birth Place</label>
+                      <p className="font-medium">{user.birthPlace}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Birth Date</label>
+                      <p className="font-medium">{formatDate(user.birthDate)}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">Phone Number</label>
+                      <p className="font-medium">{user.phoneNumber}</p>
                     </div>
                   </div>
                 </div>

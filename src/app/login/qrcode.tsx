@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 
 export default function QRCodeLogin() {
   const [result, setResult] = useState('');
-  // const [error, setError] = useState('');
   const [scanning, setScanning] = useState(true);
   const [cameras, setCameras] = useState<CameraDevice[]>([]);
   const [selectedCameraId, setSelectedCameraId] = useState<string>('');
@@ -23,8 +22,9 @@ export default function QRCodeLogin() {
       toast.success('Login successful');
       router.push('/dashboard');
     } catch (err: any) {
-      toast.error(err.message);
-    } finally{
+      toast.error(err.message || 'Failed to login');
+      setScanning(true);
+    } finally {
       setLoading(false);
     }
   };
@@ -34,12 +34,14 @@ export default function QRCodeLogin() {
       .then((devices) => {
         if (devices && devices.length) {
           setCameras(devices);
+          // Select the first camera by default
+          setSelectedCameraId(devices[0].id);
         } else {
           toast.error('No camera detected');
         }
       })
       .catch((err) => {
-        toast.error(`Failed to access camera`);
+        toast.error('Failed to access camera');
       });
   }, []);
 
@@ -59,7 +61,6 @@ export default function QRCodeLogin() {
 
         setResult(decodedText);
         setScanning(false);
-        // scanner.stop().then(() => scanner.clear());
         handleLogin(decodedText);
       };
 
@@ -74,8 +75,7 @@ export default function QRCodeLogin() {
             onScanError
           );
         } catch (e) {
-          toast.error("failed to start scanner");
-          // scanner.stop().then(() => scanner.clear()).catch(() => {});
+          toast.error("Failed to start scanner");
           scannerRef.current = null;
         }
       })();
@@ -91,7 +91,6 @@ export default function QRCodeLogin() {
 
   const restartScanner = () => {
     setResult('');
-    // setError('');
     setScanning(true);
   };
 
@@ -109,9 +108,7 @@ export default function QRCodeLogin() {
           }}
           className="mb-4 p-2 border rounded-lg bg-white text-gray-700 focus:outline-none focus:border-teal-500"
         >
-          <option value={""}>
-            Select a camera
-          </option>
+          <option value="">Select a camera</option>
           {cameras.map((camera) => (
             <option key={camera.id} value={camera.id}>
               {camera.label}
@@ -145,19 +142,6 @@ export default function QRCodeLogin() {
             </div>
           )}
         </div>
-
-        {/* {error && (
-          <div className="mt-4 p-4 bg-red-100 rounded-lg">
-            <p className="text-red-800 font-medium">Error:</p>
-            <p className="text-red-600">{error}</p>
-            <button
-              onClick={restartScanner}
-              className="mt-2 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-        )} */}
       </div>
 
       <style jsx>{`
