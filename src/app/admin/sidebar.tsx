@@ -35,6 +35,7 @@ export default function sidebar({setSidebarOpen}: {setSidebarOpen: React.Dispatc
           <SidebarLink href="/admin/doctors" icon="bi-person-standing" text="Doctors" handleNavigate={handleNavigate}/>
           <SidebarLink href="/admin/appointments" icon="bi-clipboard-check-fill" text="Appointments" handleNavigate={handleNavigate}/>
           <SidebarLink href="/admin/message" icon="bi-chat-left-dots" text="Message" handleNavigate={handleNavigate}/>
+          <SidebarLink href="/admin/pharmacy" icon="bi-capsule" text="Pharmacy" handleNavigate={handleNavigate}/>
         </nav>
       </div>
 

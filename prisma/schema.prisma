@@ -116,6 +116,9 @@ model Pharmacy {
   namaObat          String
   keteranganPenggunaan String
   dosis             String
+  usagePerDay       Int
+  usageDay          Int
+  jamPenggunaan     Json
   tanggalMulaiObat  DateTime
   tanggalSelesaiObat DateTime
 
