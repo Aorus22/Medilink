@@ -7,7 +7,7 @@ import {
   AcademicCapIcon,
 } from "@heroicons/react/24/solid";
 import { motion } from "framer-motion";
-import ServicePageGraphic from "../../../public/ServicePageGraphic.jpg";
+// import ServicePageGraphic from "../../../public/ServicePageGraphic.jpg";
 import Services from "./Services";
 
 const sdg3 = "/sdg3.png";

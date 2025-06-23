@@ -13,6 +13,7 @@ export default function MessageListPage() {
   const [doctors, setDoctors] = useState<{ id: number; name: string; specialist: string }[]>([]);
   const [loadingDoctors, setLoadingDoctors] = useState(false);
   const [doctorSearchTerm, setDoctorSearchTerm] = useState("");
+  const [showChatOption, setShowChatOption] = useState(false);
 
   const filteredDoctors = doctors.filter((doctor) =>
     doctor.name.toLowerCase().includes(doctorSearchTerm.toLowerCase()) ||
@@ -142,15 +143,51 @@ export default function MessageListPage() {
       {/* Floating action button */}
       <div className="absolute bottom-6 right-6 z-40">
         <button
-          onClick={() => {
-            setShowDoctorList(true);
-            fetchDoctors();
-          }}
+          onClick={() => setShowChatOption(true)}
           className="w-14 h-14 rounded-full bg-gradient-to-r from-teal-500 to-teal-700 text-white shadow-lg flex items-center justify-center hover:opacity-90 transition"
         >
           <i className="bi bi-plus-lg text-2xl"></i>
         </button>
+
       </div>
+
+      {showChatOption && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="relative bg-white rounded-xl shadow-xl max-w-sm w-full mx-4 overflow-hidden">
+            <div className="p-5">
+              <h3 className="text-lg font-semibold mb-4">Start New Chat</h3>
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    setShowChatOption(false);
+                    setShowDoctorList(true);
+                    fetchDoctors();
+                  }}
+                  className="w-full py-3 px-4 rounded-lg bg-teal-600 text-white hover:bg-teal-700 transition"
+                >
+                  Chat with Doctor
+                </button>
+                <button
+                  onClick={() => {
+                    setShowChatOption(false);
+                    window.location.href = "/message/ai";
+                  }}
+                  className="w-full py-3 px-4 rounded-lg border border-teal-600 text-teal-600 hover:bg-teal-50 transition"
+                >
+                  Ask AI Assistant
+                </button>
+              </div>
+              <button
+                  onClick={() => setShowChatOption(false)}
+                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+                >
+                  <i className="bi bi-x-lg text-lg"></i>
+                </button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* Modal for new conversation */}
       {showDoctorList && (
