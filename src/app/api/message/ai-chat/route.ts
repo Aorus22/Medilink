@@ -1,33 +1,50 @@
 import { NextRequest, NextResponse } from "next/server";
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY
-});
+const apiKey = process.env.GEMINI_API_KEY;
+
+if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not set in the environment variables.");
+}
+
+const genAI = new GoogleGenerativeAI(apiKey);
+
+
 
 export async function POST(req: NextRequest) {
-    const { question } = await req.json();
+  try {
+    const { message, history } = await req.json();
 
-    try {
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4.1",
-            messages: [
-                {
-                    role: "system",
-                    content: "You are a helpful AI health assistant. Answer general questions about symptoms and prevention. Avoid giving medical diagnoses or prescriptions."
-                },
-                {
-                    role: "user",
-                    content: question
-                }
-            ]
-        });
+    
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+      
+      systemInstruction: `
+        Anda adalah "Asisten Sehat AI", seorang asisten virtual yang berpengetahuan dan simpatik.
+        Tugas Anda adalah memberikan informasi awal mengenai gejala penyakit dan langkah-langkah pencegahan atau pertolongan pertama yang bisa dilakukan di rumah.
+        Gunakan bahasa Indonesia yang mudah dipahami, ramah, dan menenangkan.
+        
+        ATURAN UTAMA:
+        1. JANGAN PERNAH memberikan diagnosis medis.
+        2. Selalu awali atau akhiri jawaban Anda dengan DISCLAIMER yang jelas. Contoh: "Informasi ini tidak menggantikan nasihat medis profesional. Segera konsultasikan dengan dokter atau kunjungi fasilitas kesehatan terdekat untuk diagnosis dan penanganan yang akurat."
+        3. Fokus pada pertolongan pertama yang aman dan umum (misal: kompres air hangat, minum air putih, istirahat).
+        4. Jika gejala yang disebutkan terdengar serius (seperti nyeri dada hebat, sesak napas, pingsan), sarankan pengguna untuk SEGERA mencari pertolongan medis darurat atau menelepon ambulans.
+        5. Strukturkan jawaban dengan poin-poin atau paragraf pendek agar mudah dibaca.
+      `,
+    });
 
-        const reply = completion.choices[0].message.content ?? "Sorry, I couldn't generate a response.";
+    const chat = model.startChat({
+      history: history || [], 
+    });
 
-        return NextResponse.json({ reply });
-    } catch (error) {
-        console.error("Error generating AI response:", error);
-        return NextResponse.json({ error: "Failed to fetch response from AI." }, { status: 500 });
-    }
+    const result = await chat.sendMessage(message);
+    const response = await result.response;
+    const text = response.text();
+    
+    return Response.json({ text });
+
+  } catch (error) {
+    console.error("Error di API route:", error);
+    return Response.json({ error: "Terjadi kesalahan saat memproses permintaan Anda." }, { status: 500 });
+  }
 }
