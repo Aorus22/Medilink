@@ -27,7 +27,7 @@ export default function AIChatPage() {
       setMessages([
         {
           role: "assistant",
-          content: "Halo! Saya Asisten Kesehatan AI. Ada yang bisa saya bantu?",
+          content: "Halo! Saya Artificial Intelligence (AI) Asisten Sehat MedLink Smart Anda, siap membantu dengan informasi awal seputar kesehatan. Senang Anda menghubungi saya.",
         }
       ]);
     }
