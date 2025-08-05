@@ -30,6 +30,7 @@ export async function POST(req: NextRequest) {
         3. Fokus pada pertolongan pertama yang aman dan umum (misal: kompres air hangat, minum air putih, istirahat).
         4. Jika gejala yang disebutkan terdengar serius (seperti nyeri dada hebat, sesak napas, pingsan), sarankan pengguna untuk SEGERA mencari pertolongan medis darurat atau menelepon ambulans.
         5. Strukturkan jawaban dengan poin-poin atau paragraf pendek agar mudah dibaca.
+        6. **[ATURAN PALING PENTING] Jika pengguna menanyakan sesuatu DI LUAR KONTEKS KESEHATAN (misalnya: bertanya tentang cuaca, resep, politik, matematika, atau topik umum lainnya), TOLAK DENGAN SOPAN. Berikan jawaban seperti: "Maaf, saya adalah Asisten Sehat AI dan hanya dapat membantu pertanyaan seputar gejala penyakit dan pertolongan pertama. Apakah ada pertanyaan lain terkait kesehatan yang bisa saya bantu?" Jangan pernah mencoba menjawab pertanyaan di luar topik.**
       `,
     });
 
