@@ -19,7 +19,8 @@ services:
     environment:
       DATABASE_URL: "postgresql://medilink_user:medilink_password@postgres:5432/medilinkdb?schema=public"
     ports:
-      - 7672:3000 # Next JS
+      - 7672:3000
+      - 7673:5555
     depends_on:
       - postgres
 
