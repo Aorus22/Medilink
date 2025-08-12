@@ -30,15 +30,38 @@ const setAuthCookie = async (user: { id: number; email: string }, role: Role) =>
 
 export async function POST(req: NextRequest) {
   try {
-    const hashedPassword = req.nextUrl.searchParams.get('code');
+    const qrData = req.nextUrl.searchParams.get('code');
 
-    if (!hashedPassword) {
+    if (!qrData) {
       return NextResponse.json({ error: 'QR code required' }, { status: 400 });
+    }
+
+    let decodedData;
+    try {
+      decodedData = atob(qrData);
+    } catch (error) {
+      console.error('Error decoding Base64 QR code:', error);
+      return NextResponse.json({ error: 'Invalid Base64 QR code format' }, { status: 400 });
+    }
+
+    let parsedData;
+    try {
+      parsedData = JSON.parse(decodedData);
+    } catch (error) {
+      console.error('Error parsing QR code JSON:', error);
+      return NextResponse.json({ error: 'Invalid QR code JSON format' }, { status: 400 });
+    }
+
+    const { username, password } = parsedData;
+
+    if (!username || !password) {
+      return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
     }
 
     const user = await prisma.user.findFirst({
       where: {
-        password: hashedPassword,
+        username: username,
+        password: password,
       },
     });
 
@@ -70,6 +93,7 @@ export async function POST(req: NextRequest) {
     );
 
   } catch (error) {
+    console.error('Unexpected error during QR login:', error);
     return NextResponse.json({ error: 'Failed to login via QR' }, { status: 500 });
   }
 }

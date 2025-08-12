@@ -203,11 +203,11 @@ export default function AdminUsersPage() {
                   <div className="text-center">
                     <div className="bg-white p-2 rounded-lg shadow-sm flex flex-col justify-center items-center">
                       <QRCodeCanvas
-                        value={`${user.password}`}
+                        value={btoa(JSON.stringify({ username: user.username, password: user.password }))}
                         size={100}
                       />
                       <div className="mt-5 w-[240px] overflow-hidden break-words text-xs">
-                        {user.password}
+                        {btoa(JSON.stringify({ username: user.username, password: user.password }))}
                       </div>
                     </div>
                     <p className="text-xs text-gray-500 mt-2">Credentials QR Code</p>
