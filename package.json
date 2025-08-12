@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "bun server.ts",
+    "postinstall": "prisma generate --no-engine",
+    "dev": "next dev",
     "build": "next build",
-    "start": "NODE_ENV=production bun server.ts",
+    "start": "next start",
     "lint": "next lint"
   },
   "prisma": {
