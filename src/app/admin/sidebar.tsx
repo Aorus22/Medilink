@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 
-const logo = '/assets/Logo/medlink.png';
+const logo = '/logo-new.png';
 
 export default function sidebar({setSidebarOpen}: {setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>}) {
   const { logout } = useAuth();
@@ -30,26 +30,26 @@ export default function sidebar({setSidebarOpen}: {setSidebarOpen: React.Dispatc
         </div>
         <nav className="flex flex-col">
           <SidebarLink href="/admin/dashboard" icon="bi-house-door" text="Dashboard" handleNavigate={handleNavigate}/>
-          <SidebarLink href="/admin/users" icon="bi-clipboard-check-fill" text="Users" handleNavigate={handleNavigate}/>
-          <SidebarLink href="/admin/medical-checkup" icon="bi-gear-wide" text="Medical Checkup"handleNavigate={handleNavigate}/>
-          <SidebarLink href="/admin/doctors" icon="bi-person-standing" text="Doctors" handleNavigate={handleNavigate}/>
-          <SidebarLink href="/admin/appointments" icon="bi-clipboard-check-fill" text="Appointments" handleNavigate={handleNavigate}/>
-          <SidebarLink href="/admin/message" icon="bi-chat-left-dots" text="Message" handleNavigate={handleNavigate}/>
-          <SidebarLink href="/admin/pharmacy" icon="bi-capsule" text="Pharmacy" handleNavigate={handleNavigate}/>
-          <SidebarLink href="/admin/iv-monitoring" icon="bi-pc-display-horizontal" text="IV Monitoring" handleNavigate={handleNavigate}/>
+          <SidebarLink href="/admin/users" icon="bi-clipboard-check-fill" text="Pengguna" handleNavigate={handleNavigate}/>
+          <SidebarLink href="/admin/medical-checkup" icon="bi-gear-wide" text="MCU"handleNavigate={handleNavigate}/>
+          <SidebarLink href="/admin/doctors" icon="bi-person-standing" text="Dokter" handleNavigate={handleNavigate}/>
+          <SidebarLink href="/admin/appointments" icon="bi-clipboard-check-fill" text="Janji Temu" handleNavigate={handleNavigate}/>
+          <SidebarLink href="/admin/message" icon="bi-chat-left-dots" text="Pesan" handleNavigate={handleNavigate}/>
+          <SidebarLink href="/admin/pharmacy" icon="bi-capsule" text="Farmasi" handleNavigate={handleNavigate}/>
+          <SidebarLink href="/admin/iv-monitoring" icon="bi-pc-display-horizontal" text="Monitoring Infus" handleNavigate={handleNavigate}/>
         </nav>
       </div>
 
       <div className="flex flex-col gap-2">
-        <SidebarLink href="/account" icon="bi-person-fill" text="My Account" handleNavigate={handleNavigate}/>
+        <SidebarLink href="/account" icon="bi-person-fill" text="Akun Saya" handleNavigate={handleNavigate}/>
         <button
           onClick={logout}
           className="flex items-center gap-2 p-2 mb-2 rounded-lg text-gray-500 hover:bg-teal-500 hover:text-white transition w-full text-left"
         >
           <i className="bi bi-box-arrow-right"></i>
-          <span>Sign Out</span>
+          <span>Keluar</span>
         </button>
-        <SidebarLink href="/help" icon="bi-question-circle-fill" text="Help" handleNavigate={handleNavigate}/>
+        <SidebarLink href="/help" icon="bi-question-circle-fill" text="Bantuan" handleNavigate={handleNavigate}/>
       </div>
     </>
   )

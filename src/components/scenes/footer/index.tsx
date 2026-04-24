@@ -5,13 +5,13 @@ const Footer = () => {
         <div className="flex-1 w-full">
           <div className="flex flex-col w-auto">
             <div>
-              <img alt="logo" src={"/assets/Logo/medlink.png"} className="h-10 w-13" />
+              <img alt="logo" src={"/logo-new.png"} className="h-10 w-13" />
               <p className="font-montserrat block text-xl font-bold">
-                MedLink
+                Medixense
               </p>
             </div>
             <p className="my-5 max-w-[100%][3000px]">
-              Our research successfully developed MedLink Smart, an Internet of medical things (IoMT) system that integrates MPX5050DP
+              Our research successfully developed Medixense, an Internet of medical things (IoMT) system that integrates MPX5050DP
               (blood pressure measurement), MLX90614 (body temperature measurement), ammd GY-MAX30102 (oxygen saturation and heart rate
               measurement) sensors with ESP32 module for automation in the healthcare sector.
             </p>
@@ -32,7 +32,7 @@ const Footer = () => {
 
       </div>
       <div className="px-16 pb-10">
-        <p>© MedLink Smart All Rights Reserved.</p>
+        <p>© Medixense All Rights Reserved.</p>
         <p className="mt-2 font-bold">Sponsorship</p>
         <div className="flex gap-4">
           <img className="h-12" src={"/assets/dynatech logo.png"}/>

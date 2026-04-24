@@ -27,16 +27,16 @@ const About = ({ setSelectedPage }: Props) => {
           }}
         >
           <div className="md:w-full">
-            <HText>What is MedLink?</HText>
+            <HText>What is Medixense?</HText>
             <p className="py-5">
-              MedLink Smart is an innovative prototype based on the Internet of
+              Medixense Smart is an innovative prototype based on the Internet of
               Things (IoT) designed to monitor and manage health data in
               real-time. This device uses MPX and MLX sensors to measure
               specific health parameters, such as pressure or temperature, which
               are then processed and stored in a server-based system. This data
               can be accessed through a web interface, allowing users, both
               healthcare professionals and patients, to obtain accurate and fast
-              information. MedLink Smart aims to improve healthcare service
+              information. Medixense Smart aims to improve healthcare service
               efficiency, provide transparent data access, and support more
               timely medical decision-making.
             </p>

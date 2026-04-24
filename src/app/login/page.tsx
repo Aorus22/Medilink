@@ -12,10 +12,8 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6">
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="flex justify-center">
-            <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-r from-teal-500 to-teal-700 rounded-full mb-4">
-              <i className="bi bi-person-fill text-white text-2xl"></i>
-            </div>
+          <div className="flex justify-center mb-4">
+            <img src="/logo-new.png" alt="Logo" className="w-16 h-16 object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-gray-800">Login</h1>
           <p className="text-gray-600">Please enter your credentials to continue</p>

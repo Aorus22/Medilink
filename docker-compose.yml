@@ -1,23 +1,23 @@
 services:
   postgres:
-    image: postgres:alpine
-    container_name: medilink-postgres
+    image: postgres:17-alpine
+    container_name: medixense-postgres
     restart: always
     environment:
-      POSTGRES_DB: medilinkdb
-      POSTGRES_USER: medilink_user
-      POSTGRES_PASSWORD: medilink_password
+      POSTGRES_DB: medixensedb
+      POSTGRES_USER: medixense_user
+      POSTGRES_PASSWORD: medixense_password
     ports:
       - 7671:5432
     volumes:
-      - medilink-pgdata:/var/lib/postgresql/data
+      - medixense-pgdata-v2:/var/lib/postgresql/data
 
   app:
-    image: aorus22/medilink:latest
-    container_name: medilink-app
+    build: .
+    container_name: medixense-app
     restart: always
     environment:
-      DATABASE_URL: "postgresql://medilink_user:medilink_password@postgres:5432/medilinkdb?schema=public"
+      DATABASE_URL: "postgresql://medixense_user:medixense_password@postgres:5432/medixensedb?schema=public"
     ports:
       - 7672:3000
       - 7673:5555
@@ -25,4 +25,4 @@ services:
       - postgres
 
 volumes:
-  medilink-pgdata:
+  medixense-pgdata-v2:

@@ -5,7 +5,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export const metadata: Metadata = {
-  title: "Medlink Smart",
+  title: "Medixense",
   description: "Our Product offers an efficiency that brings together various healtcare services, such as medical records, doctor consultations, medication ordering and treatment reminder.",
   icons: {
     icon: "/favicons.ico",

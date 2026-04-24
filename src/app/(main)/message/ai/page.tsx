@@ -27,7 +27,7 @@ export default function AIChatPage() {
       setMessages([
         {
           role: "assistant",
-          content: "Halo! Saya Artificial Intelligence (AI) Asisten Sehat MedLink Smart Anda, siap membantu dengan informasi awal seputar kesehatan. Senang Anda menghubungi saya.",
+          content: "Halo! Saya Medixense AI Assistant, siap membantu Anda dengan informasi kesehatan yang akurat dan terpercaya. Ada yang bisa saya bantu hari ini?",
         }
       ]);
     }
@@ -92,7 +92,7 @@ export default function AIChatPage() {
             AI
           </div>
           <div>
-            <h3 className="font-medium">Health AI Assistant</h3>
+            <h3 className="font-medium">Medixense AI Assistant</h3>
             <p className="text-xs text-teal-600">Online</p>
           </div>
         </div>

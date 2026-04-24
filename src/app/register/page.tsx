@@ -317,10 +317,8 @@ export default function SignupPage() {
     <div className="w-full min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-teal-100 px-4 py-10">
       <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
         <div className="text-center mb-6">
-          <div className="flex justify-center">
-            <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-r from-teal-500 to-teal-700 rounded-full mb-4">
-              <i className="bi bi-person-plus-fill text-white text-2xl"></i>
-            </div>
+          <div className="flex justify-center mb-4">
+            <img src="/logo-new.png" alt="Logo" className="w-16 h-16 object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-gray-800">Create Account</h1>
           <p className="text-gray-600">Please fill in the details to register</p>

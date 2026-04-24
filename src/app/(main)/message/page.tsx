@@ -165,7 +165,7 @@ export default function MessageListPage() {
                   }}
                   className="w-full py-3 px-4 rounded-lg bg-teal-600 text-white hover:bg-teal-700 transition"
                 >
-                  Chat with Doctor
+                  Konsultasi Dokter
                 </button>
                 <button
                   onClick={() => {
@@ -174,7 +174,7 @@ export default function MessageListPage() {
                   }}
                   className="w-full py-3 px-4 rounded-lg border border-teal-600 text-teal-600 hover:bg-teal-50 transition"
                 >
-                  Ask AI Assistant
+                  Tanya AI Asisten
                 </button>
               </div>
               <button

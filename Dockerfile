@@ -32,4 +32,4 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/websocket ./websocket
 COPY --from=builder /app/server.ts ./server.ts
 
-CMD ["sh", "-c", "bun server.ts & bunx prisma studio"]
+CMD ["bun", "server.ts"]
