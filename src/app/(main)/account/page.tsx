@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 const UserProfilePage: React.FC = () => {
   const { user } = useAuth()
 
-  const userDefault = {
+  const userDefault: UserData = {
     id: 0,
     username: "",
     email: "",
@@ -18,7 +18,8 @@ const UserProfilePage: React.FC = () => {
     birthPlace: "",
     birthDate: "",
     phoneNumber: "",
-    avatar: ""
+    avatar: "",
+    role: "USER"
   }
 
   const [userData, setUserData] = useState<UserData>(user || userDefault);

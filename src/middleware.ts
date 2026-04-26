@@ -15,7 +15,6 @@ export async function middleware(req: NextRequest) {
 
   // Allow public routes
   const publicRoutes = [
-    '/',
     '/login',
     '/register',
     '/api/auth/login',
@@ -23,7 +22,24 @@ export async function middleware(req: NextRequest) {
     '/api/auth/me',
   ]
 
-  if (publicRoutes.includes(pathname)) { return NextResponse.next() }
+  if (publicRoutes.includes(pathname)) {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth_token')?.value;
+
+    if (token && (pathname === '/login' || pathname === '/register')) {
+      try {
+        const decoded = await verifyJWT(token);
+        if (decoded.role === 'ADMIN') {
+          return NextResponse.redirect(new URL('/admin/dashboard', req.url));
+        }
+        return NextResponse.redirect(new URL('/dashboard', req.url));
+      } catch (error) {
+        // If token is invalid, continue to login/register
+        return NextResponse.next();
+      }
+    }
+    return NextResponse.next();
+  }
 
   const cookieStore = await cookies();
   const token = cookieStore.get('auth_token')?.value;
@@ -33,6 +49,14 @@ export async function middleware(req: NextRequest) {
   }
 
   const decoded = await verifyJWT(token);
+
+  // If visiting root, redirect to respective dashboard
+  if (pathname === '/') {
+    if (decoded.role === 'ADMIN') {
+      return NextResponse.redirect(new URL('/admin/dashboard', req.url));
+    }
+    return NextResponse.redirect(new URL('/dashboard', req.url));
+  }
 
   // Allow all API routes for authenticated users
   if (pathname.startsWith('/api/')) {
@@ -71,6 +95,9 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    '/',
+    '/login',
+    '/register',
     '/account/:path*',
     '/appointment/:path*',
     '/dashboard/:path*',
