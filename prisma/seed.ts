@@ -18,8 +18,25 @@ async function main() {
   await prisma.mriTest.deleteMany();
   await prisma.urineTest.deleteMany();
   await prisma.bloodTest.deleteMany();
+  await prisma.medicine.deleteMany();
   await prisma.user.deleteMany();
   await prisma.doctor.deleteMany();
+
+  // Seed master medicines
+  const medicines = await prisma.medicine.createMany({
+    data: [
+      { namaObat: "Paracetamol", harga: 15000 },
+      { namaObat: "Amoxicillin", harga: 25000 },
+      { namaObat: "Omeprazole", harga: 35000 },
+      { namaObat: "Simvastatin", harga: 45000 },
+      { namaObat: "Metformin", harga: 20000 },
+      { namaObat: "Aspirin", harga: 10000 },
+      { namaObat: "Captopril", harga: 18000 },
+      { namaObat: "Ranitidine", harga: 22000 },
+    ],
+  });
+
+  console.log("Medicines added.", medicines);
 
   const doctors = await prisma.doctor.createMany({
     data: [
@@ -87,117 +104,158 @@ async function main() {
         birthDate: new Date("2002-02-18"),
         phoneNumber: "085156346402",
         avatar: ""
-      }
+      },
+      {
+        email: "doctor1@ums.ac.id",
+        username: "dr.amanda",
+        password: hashed("doctor123"),
+        name: "Dr. Amanda Wilson",
+        gender: "Female",
+        major: "Medicine",
+        studentId: "DOC001",
+        birthPlace: "New York",
+        birthDate: new Date("1980-05-10"),
+        phoneNumber: "081234567890",
+        avatar: ""
+      },
     ],
   });
 
   console.log("Users added:", users);
 
-  const doctor1 = await prisma.doctor.findFirst({ where: { name: "Dr. Amanda Wilson" } });
+  // Link Dr. Amanda Wilson to the doctor user account
+  const doctorAmanda = await prisma.doctor.findFirst({ where: { name: "Dr. Amanda Wilson" } });
+  const doctorUser = await prisma.user.findFirst({ where: { username: "dr.amanda" } });
+
+  if (doctorAmanda && doctorUser) {
+    await prisma.doctor.update({
+      where: { id: doctorAmanda.id },
+      data: { userId: doctorUser.id },
+    });
+    console.log("Linked Dr. Amanda Wilson to user dr.amanda");
+  }
+
+  // Link Dr. Michael Chen to marko123 for testing (so marko also has doctor access)
+  const doctorMichael = await prisma.doctor.findFirst({ where: { name: "Dr. Michael Chen" } });
+  const markoUser = await prisma.user.findFirst({ where: { username: "marko123" } });
+
+  if (doctorMichael && markoUser) {
+    await prisma.doctor.update({
+      where: { id: doctorMichael.id },
+      data: { userId: markoUser.id },
+    });
+    console.log("Linked Dr. Michael Chen to user marko123");
+  }
+
   const user = await prisma.user.findFirst({ where: { name: "Marko Refianto" } });
+  const doctor1 = doctorAmanda;
 
-  const messages = await prisma.message.createMany({
-    data: [
-      {
-        sender: "DOCTOR",
-        content: "Hello Marko, how are you feeling today?",
-        userId: user.id,
-        doctorId: doctor1.id,
-        time: new Date("2024-05-01T09:30:00"),
-      },
-      {
-        sender: "USER",
-        content: "Hi Dr. Wilson, I'm feeling better than yesterday. The chest pain has decreased.",
-        userId: user.id,
-        doctorId: doctor1.id,
-        time: new Date("2024-05-01T09:32:00"),
-      },
-      {
-        sender: "DOCTOR",
-        content: "That's good to hear. Have you been taking the prescribed medications regularly?",
-        userId: user.id,
-        doctorId: doctor1.id,
-        time: new Date("2024-05-01T09:35:00"),
-      },
-      {
-        sender: "USER",
-        content: "Yes, I've been taking them as prescribed. But I'm experiencing some dizziness as a side effect.",
-        userId: user.id,
-        doctorId: doctor1.id,
-        time: new Date("2024-05-01T09:38:00"),
-      },
-      {
-        sender: "DOCTOR",
-        content: "Dizziness can be a side effect of the medication. When does it typically occur?",
-        userId: user.id,
-        doctorId: doctor1.id,
-        time: new Date("2024-05-01T09:40:00"),
-      },
-      {
-        sender: "USER",
-        content: "Usually about an hour after taking the morning dose. It lasts for about 30 minutes.",
-        userId: user.id,
-        doctorId: doctor1.id,
-        time: new Date("2024-05-01T09:42:00"),
-      },
-      {
-        sender: "DOCTOR",
-        content: "I see. Try taking it with food to reduce the dizziness. If it persists or worsens, we might need to adjust the dosage.",
-        userId: user.id,
-        doctorId: doctor1.id,
-        time: new Date("2024-05-01T09:43:00"),
-      },
-    ],
-  });
+  if (user && doctor1) {
+    const messages = await prisma.message.createMany({
+      data: [
+        {
+          sender: "DOCTOR",
+          content: "Hello Marko, how are you feeling today?",
+          userId: user.id,
+          doctorId: doctor1.id,
+          time: new Date("2024-05-01T09:30:00"),
+        },
+        {
+          sender: "USER",
+          content: "Hi Dr. Wilson, I'm feeling better than yesterday. The chest pain has decreased.",
+          userId: user.id,
+          doctorId: doctor1.id,
+          time: new Date("2024-05-01T09:32:00"),
+        },
+        {
+          sender: "DOCTOR",
+          content: "That's good to hear. Have you been taking the prescribed medications regularly?",
+          userId: user.id,
+          doctorId: doctor1.id,
+          time: new Date("2024-05-01T09:35:00"),
+        },
+        {
+          sender: "USER",
+          content: "Yes, I've been taking them as prescribed. But I'm experiencing some dizziness as a side effect.",
+          userId: user.id,
+          doctorId: doctor1.id,
+          time: new Date("2024-05-01T09:38:00"),
+        },
+        {
+          sender: "DOCTOR",
+          content: "Dizziness can be a side effect of the medication. When does it typically occur?",
+          userId: user.id,
+          doctorId: doctor1.id,
+          time: new Date("2024-05-01T09:40:00"),
+        },
+        {
+          sender: "USER",
+          content: "Usually about an hour after taking the morning dose. It lasts for about 30 minutes.",
+          userId: user.id,
+          doctorId: doctor1.id,
+          time: new Date("2024-05-01T09:42:00"),
+        },
+        {
+          sender: "DOCTOR",
+          content: "I see. Try taking it with food to reduce the dizziness. If it persists or worsens, we might need to adjust the dosage.",
+          userId: user.id,
+          doctorId: doctor1.id,
+          time: new Date("2024-05-01T09:43:00"),
+        },
+      ],
+    });
 
-  console.log("Messages added:", messages);
+    console.log("Messages added:", messages);
+  }
 
-  const historicalData = await prisma.historicalData.createMany({
-    data: [
-      {
-        parameter: "Temperature",
-        value: "37.5",
-        unit: " °C",
-        information: "Normal",
-        date: new Date("2024-04-15T10:00:00"),
-        userId: user.id,
-      },
-      {
-        parameter: "Blood Pressure",
-        value: "120/80",
-        unit: " mmHg",
-        information: "Normal",
-        date: new Date("2024-04-15T10:00:00"),
-        userId: user.id,
-      },
-      {
-        parameter: "Heart Rate",
-        value: "78",
-        unit: "BPM",
-        information: "Normal",
-        date: new Date("2024-04-15T10:00:00"),
-        userId: user.id,
-      },
-      {
-        parameter: "SPO2",
-        value: "98",
-        unit: "%",
-        information: "Normal",
-        date: new Date("2024-04-15T10:00:00"),
-        userId: user.id,
-      },
-      {
-        parameter: "Temperature",
-        value: "38.2",
-        unit: "°C",
-        information: "Elevated",
-        date: new Date("2024-04-14T10:00:00"),
-        userId: user.id,
-      }
-    ]
-  });
+  if (user) {
+    const historicalData = await prisma.historicalData.createMany({
+      data: [
+        {
+          parameter: "Temperature",
+          value: "37.5",
+          unit: " °C",
+          information: "Normal",
+          date: new Date("2024-04-15T10:00:00"),
+          userId: user.id,
+        },
+        {
+          parameter: "Blood Pressure",
+          value: "120/80",
+          unit: " mmHg",
+          information: "Normal",
+          date: new Date("2024-04-15T10:00:00"),
+          userId: user.id,
+        },
+        {
+          parameter: "Heart Rate",
+          value: "78",
+          unit: "BPM",
+          information: "Normal",
+          date: new Date("2024-04-15T10:00:00"),
+          userId: user.id,
+        },
+        {
+          parameter: "SPO2",
+          value: "98",
+          unit: "%",
+          information: "Normal",
+          date: new Date("2024-04-15T10:00:00"),
+          userId: user.id,
+        },
+        {
+          parameter: "Temperature",
+          value: "38.2",
+          unit: "°C",
+          information: "Elevated",
+          date: new Date("2024-04-14T10:00:00"),
+          userId: user.id,
+        }
+      ]
+    });
 
-  console.log("Historical Data created:", historicalData);
+    console.log("Historical Data created:", historicalData);
+  }
 
   const allDoctors = await prisma.doctor.findMany();
 
