@@ -22,7 +22,7 @@ ENV NODE_ENV=production
 EXPOSE 3000
 EXPOSE 5555
 
-RUN bun add @prisma/client
+RUN bun add @prisma/client prisma@^6.7.0
 
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/node_modules/next ./node_modules/next
@@ -32,4 +32,4 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/websocket ./websocket
 COPY --from=builder /app/server.ts ./server.ts
 
-CMD ["sh", "-c", "bun server.ts & bunx prisma studio"]
+CMD ["sh", "-c", "bunx prisma studio & bun server.ts"]

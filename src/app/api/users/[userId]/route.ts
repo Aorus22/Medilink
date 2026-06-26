@@ -4,12 +4,6 @@ import { getAuthContext } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
-export interface UserDetailsResponse {
-  id: number;
-  name: string;
-  username: string;
-}
-
 export async function GET(req: NextRequest, { params }: any) {
   const ctx = await getAuthContext(req);
 
@@ -31,13 +25,11 @@ export async function GET(req: NextRequest, { params }: any) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const formattedUser: UserDetailsResponse = {
+    return NextResponse.json({
       id: user.id,
       name: user.name,
-      username: user.username
-    }
-
-    return NextResponse.json(formattedUser, { status: 200 });
+      username: user.username,
+    }, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch user' }, { status: 500 });
   }

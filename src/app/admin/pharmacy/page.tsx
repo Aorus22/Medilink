@@ -140,7 +140,7 @@ function Pharmacy() {
       const fetchUsers = async () => {
         setUserLoading(true);
         try {
-          const response = await fetch("/api/user-list");
+          const response = await fetch("/api/users");
           if (!response.ok) throw new Error("Failed to fetch users");
           const data = await response.json();
           setUsers(data);
@@ -161,7 +161,7 @@ function Pharmacy() {
         return;
       }
       try {
-        const response = await fetch("/api/user-list");
+        const response = await fetch("/api/users");
         if (!response.ok) throw new Error("Failed to fetch user list");
         const data: User[] = await response.json();
         const foundUser = data.find((user) => user.id === selectedUserId);
@@ -288,8 +288,8 @@ function Pharmacy() {
       return;
 
     try {
-      const res = await fetch(`/api/pharmacy?id=${id}`, {
-        method: "DELETE",
+      const res = await fetch(`/api/pharmacy/${id}`, {
+        method: 'DELETE',
       });
 
       if (!res.ok) throw new Error("Failed to delete medication info!");

@@ -3,6 +3,30 @@ import { PrismaClient } from '#/prisma/db';
 
 const prisma = new PrismaClient();
 
+export async function GET(req: NextRequest, { params }: any) {
+  try {
+    const { id } = await params;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Missing practice hour id' }, { status: 400 });
+    }
+
+    const practiceHour = await prisma.practiceHour.findUnique({
+      where: { id: parseInt(id) },
+      include: { doctor: { select: { name: true } } },
+    });
+
+    if (!practiceHour) {
+      return NextResponse.json({ error: 'Practice hour not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(practiceHour, { status: 200 });
+  } catch (error) {
+    console.error('Error fetching practice hour:', error);
+    return NextResponse.json({ error: 'Failed to fetch practice hour' }, { status: 500 });
+  }
+}
+
 export async function DELETE(req: NextRequest, { params }: any) {
   const userRole = req.headers.get('x-user-role');
 

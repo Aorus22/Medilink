@@ -62,6 +62,7 @@ export async function PUT(req: NextRequest) {
       },
     }, { status: 200 });
   } catch (error) {
+    console.error('Error updating user:', error);
     return NextResponse.json({ error: 'Failed to update user information' }, { status: 500 });
   } finally {
     await prisma.$disconnect();

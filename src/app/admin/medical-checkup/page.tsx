@@ -120,7 +120,7 @@ function MedicalCheckup() {
       }
 
       try {
-        const response = await fetch("/api/user-list");
+        const response = await fetch("/api/users");
         if (!response.ok) {
           throw new Error("Failed to fetch user list");
         }
@@ -140,7 +140,7 @@ function MedicalCheckup() {
   const fetchUsers = async () => {
     setUserLoading(true);
     try {
-      const response = await fetch("/api/user-list");
+      const response = await fetch("/api/users");
       if (!response.ok) {
         throw new Error("Failed to fetch users");
       }

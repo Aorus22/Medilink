@@ -51,7 +51,7 @@ export default function UserChatPage() {
 
     const fetchUser = async () => {
       try {
-        const res = await fetch(`/api/user-list/${userId}`);
+        const res = await fetch(`/api/users/${userId}`);
         const data = await res.json();
         setUser(data);
       } catch (error) {

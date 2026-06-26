@@ -3,6 +3,26 @@ import { PrismaClient } from '#/prisma/db';
 
 const prisma = new PrismaClient();
 
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const doctorId = searchParams.get('doctorId');
+
+    const where = doctorId ? { doctorId: parseInt(doctorId) } : {};
+
+    const practiceHours = await prisma.practiceHour.findMany({
+      where,
+      include: { doctor: { select: { name: true } } },
+      orderBy: [{ doctorId: 'asc' }, { dayOfWeek: 'asc' }],
+    });
+
+    return NextResponse.json(practiceHours, { status: 200 });
+  } catch (error) {
+    console.error('Error fetching practice hours:', error);
+    return NextResponse.json({ error: 'Failed to fetch practice hours' }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   const userRole = req.headers.get('x-user-role');
 
