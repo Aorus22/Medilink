@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 type UserMessage = {
   userId: number;
@@ -29,6 +30,10 @@ export default function MessagePage() {
 }
 
 function UserMessageListPage() {
+  const { user } = useAuth();
+  const isDoctor = (user as any)?.role === 'DOCTOR';
+  const doctorIdFromUser = (user as any)?.doctorId;
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -46,7 +51,7 @@ function UserMessageListPage() {
   const [loadingDoctors, setLoadingDoctors] = useState(false);
   const [doctorSearchTerm, setDoctorSearchTerm] = useState("");
 
-  const doctorId = searchParams?.get("doctorId");
+  const doctorId = isDoctor ? doctorIdFromUser?.toString() : searchParams?.get("doctorId");
 
   const filteredUsers = users.filter((user) =>
     user.name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
@@ -59,6 +64,8 @@ function UserMessageListPage() {
   );
 
   useEffect(() => {
+    if (!doctorId) return;
+
     const fetchDoctor = async () => {
       try {
         const res = await fetch(`/api/doctors/${doctorId}`);
@@ -135,15 +142,19 @@ function UserMessageListPage() {
     <main className="flex-grow p-5 overflow-y-auto h-full relative">
       {/* Header */}
       <div className="flex justify-between items-center mb-5">
-        <h2 className="text-2xl font-semibold">User Messages</h2>
+        <h2 className="text-2xl font-semibold">
+          {isDoctor ? "My Messages" : "User Messages"}
+        </h2>
       </div>
 
       {/* Doctor Profile */}
       <div
         className="mb-5 cursor-pointer"
         onClick={() => {
-          setShowDoctorList(true);
-          fetchDoctors();
+          if (!isDoctor) {
+            setShowDoctorList(true);
+            fetchDoctors();
+          }
         }}
       >
         <div className="flex items-center gap-3">
@@ -157,9 +168,11 @@ function UserMessageListPage() {
             )}
           </div>
           <div>
-            <h3 className="font-medium text-gray-800">{doctor?.name ?? "Select a doctor"}</h3>
+            <h3 className="font-medium text-gray-800">
+              {doctor?.name ?? (isDoctor ? "Loading..." : "Select a doctor")}
+            </h3>
             <p className="text-sm text-indigo-600">
-              {doctor?.specialist ?? "Click to choose a doctor"}
+              {doctor?.specialist ?? (isDoctor ? "" : "Click to choose a doctor")}
             </p>
           </div>
         </div>
@@ -228,18 +241,20 @@ function UserMessageListPage() {
         )}
       </div>
 
-      {/* Floating action button */}
-      <div className="absolute bottom-6 right-6 z-40">
-        <button
-          onClick={() => {
-            setShowUserList(true);
-            fetchUsers();
-          }}
-          className="w-14 h-14 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-700 text-white shadow-lg flex items-center justify-center hover:opacity-90 transition"
-        >
-          <i className="bi bi-plus-lg text-2xl"></i>
-        </button>
-      </div>
+      {/* Floating action button - only for ADMIN */}
+      {!isDoctor && (
+        <div className="absolute bottom-6 right-6 z-40">
+          <button
+            onClick={() => {
+              setShowUserList(true);
+              fetchUsers();
+            }}
+            className="w-14 h-14 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-700 text-white shadow-lg flex items-center justify-center hover:opacity-90 transition"
+          >
+            <i className="bi bi-plus-lg text-2xl"></i>
+          </button>
+        </div>
+      )}
 
       {/* Modal for new conversation (Users) */}
       {showUserList && (

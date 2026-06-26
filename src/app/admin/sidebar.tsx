@@ -8,7 +8,8 @@ import React from "react";
 const logo = '/assets/Logo/medlink.png';
 
 export default function sidebar({setSidebarOpen}: {setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>}) {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const isDoctor = (user as any)?.role === 'DOCTOR';
 
   const isMobile = () => {
     return window.innerWidth < 1060
@@ -30,13 +31,14 @@ export default function sidebar({setSidebarOpen}: {setSidebarOpen: React.Dispatc
         </div>
         <nav className="flex flex-col">
           <SidebarLink href="/admin/dashboard" icon="bi-house-door" text="Dashboard" handleNavigate={handleNavigate}/>
-          <SidebarLink href="/admin/users" icon="bi-clipboard-check-fill" text="Users" handleNavigate={handleNavigate}/>
-          <SidebarLink href="/admin/medical-checkup" icon="bi-gear-wide" text="Medical Checkup"handleNavigate={handleNavigate}/>
-          <SidebarLink href="/admin/doctors" icon="bi-person-standing" text="Doctors" handleNavigate={handleNavigate}/>
-          <SidebarLink href="/admin/appointments" icon="bi-clipboard-check-fill" text="Appointments" handleNavigate={handleNavigate}/>
+          {!isDoctor && <SidebarLink href="/admin/users" icon="bi-clipboard-check-fill" text="Users" handleNavigate={handleNavigate}/>}
+          {!isDoctor && <SidebarLink href="/admin/medical-checkup" icon="bi-gear-wide" text="Medical Checkup"handleNavigate={handleNavigate}/>}
+          {!isDoctor && <SidebarLink href="/admin/doctors" icon="bi-person-standing" text="Doctors" handleNavigate={handleNavigate}/>}
+          {!isDoctor && <SidebarLink href="/admin/appointments" icon="bi-clipboard-check-fill" text="Appointments" handleNavigate={handleNavigate}/>}
           <SidebarLink href="/admin/message" icon="bi-chat-left-dots" text="Message" handleNavigate={handleNavigate}/>
           <SidebarLink href="/admin/pharmacy" icon="bi-capsule" text="Pharmacy" handleNavigate={handleNavigate}/>
-          <SidebarLink href="/admin/iv-monitoring" icon="bi-pc-display-horizontal" text="IV Monitoring" handleNavigate={handleNavigate}/>
+          {!isDoctor && <SidebarLink href="/admin/iv-monitoring" icon="bi-pc-display-horizontal" text="IV Monitoring" handleNavigate={handleNavigate}/>}
+          {!isDoctor && <SidebarLink href="/admin/medicine" icon="bi-capsule-pill" text="Medicine Master" handleNavigate={handleNavigate}/>}
         </nav>
       </div>
 

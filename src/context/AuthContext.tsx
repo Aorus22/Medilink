@@ -14,6 +14,8 @@ export type UserData = {
   studentId: string;
   avatar: string;
   phoneNumber: string;
+  role?: string;
+  doctorId?: number | null;
 };
 
 type AuthContextType = {

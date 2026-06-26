@@ -6,6 +6,7 @@ import Table from "@/components/Table";
 import { Search, Trash2 } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { Suspense, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
@@ -74,6 +75,9 @@ const columns = [
 ];
 
 function Pharmacy() {
+  const { user } = useAuth();
+  const isDoctor = (user as any)?.role === 'DOCTOR';
+
   const [loading, setLoading] = useState(false);
 
   // Modal user selection
@@ -97,13 +101,17 @@ function Pharmacy() {
     tanggalSelesaiObat: "",
   });
 
+  // Master data medicines
+  const [medicines, setMedicines] = useState<{ id: number; namaObat: string; harga: number }[]>([]);
+  const [showMedicineList, setShowMedicineList] = useState(false);
+  const [medicineSearchTerm, setMedicineSearchTerm] = useState("");
+
   const [medications, setMedications] = useState([]);
 
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Handle user ID from query parameters
   useEffect(() => {
     const userId = searchParams?.get("userId");
     if (userId && !isNaN(parseInt(userId))) {
@@ -114,6 +122,18 @@ function Pharmacy() {
     }
   }, [searchParams]);
 
+  // Fetch master medicines
+  const fetchMedicines = async () => {
+    try {
+      const res = await fetch("/api/medicine");
+      if (res.ok) {
+        setMedicines(await res.json());
+      }
+    } catch {
+      console.error("Failed to fetch medicines");
+    }
+  };
+
   // Fetch users when showing user list
   useEffect(() => {
     if (showUserList) {
@@ -121,9 +141,7 @@ function Pharmacy() {
         setUserLoading(true);
         try {
           const response = await fetch("/api/user-list");
-          if (!response.ok) {
-            throw new Error("Failed to fetch users");
-          }
+          if (!response.ok) throw new Error("Failed to fetch users");
           const data = await response.json();
           setUsers(data);
         } catch (err: any) {
@@ -132,25 +150,19 @@ function Pharmacy() {
           setUserLoading(false);
         }
       };
-
       fetchUsers();
     }
   }, [showUserList]);
 
-  // ????
   useEffect(() => {
     async function fetchSelectedUser() {
       if (!selectedUserId) {
         setSelectedUser(null);
         return;
       }
-
       try {
         const response = await fetch("/api/user-list");
-        if (!response.ok) {
-          throw new Error("Failed to fetch user list");
-        }
-
+        if (!response.ok) throw new Error("Failed to fetch user list");
         const data: User[] = await response.json();
         const foundUser = data.find((user) => user.id === selectedUserId);
         setSelectedUser(foundUser ?? null);
@@ -159,11 +171,9 @@ function Pharmacy() {
         setSelectedUser(null);
       }
     }
-
     fetchSelectedUser();
   }, [selectedUserId]);
 
-  // Fetch medications info
   useEffect(() => {
     fetchMedications();
   }, [selectedUserId]);
@@ -173,13 +183,10 @@ function Pharmacy() {
       setMedications([]);
       return;
     }
-
     try {
       setLoading(true);
       const res = await fetch(`/api/pharmacy?userId=${selectedUserId}`);
-      if (!res.ok) {
-        throw new Error("Failed to fetch medications data");
-      }
+      if (!res.ok) throw new Error("Failed to fetch medications data");
       setMedications(await res.json());
     } catch (e: any) {
       console.error("Error fetching medications data:", e);
@@ -194,10 +201,22 @@ function Pharmacy() {
       user.username.toLowerCase().includes(userSearchTerm.toLowerCase())
   );
 
+  const filteredMedicines = medicines.filter((m) =>
+    m.namaObat.toLowerCase().includes(medicineSearchTerm.toLowerCase())
+  );
+
   const handleUserSelect = (user: User) => {
     router.push(`${pathname}?userId=${user.id}`);
     setSelectedUserId(user.id);
     setShowUserList(false);
+  };
+
+  const handleMedicineSelect = (medicine: { id: number; namaObat: string; harga: number }) => {
+    setFormValue((prev) => ({
+      ...prev,
+      namaObat: medicine.namaObat,
+    }));
+    setShowMedicineList(false);
   };
 
   const handleChange = (e: any) => {
@@ -238,10 +257,12 @@ function Pharmacy() {
       return toast.error("Start use time must be before end use time.");
 
     try {
-      const res = await fetch(`/api/pharmacy?userId=${selectedUserId}`, {
+      const res = await fetch(`/api/pharmacy/prescribe`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formValue,
+          userId: selectedUserId,
           tanggalMulaiObat: new Date(formValue.tanggalMulaiObat).toISOString(),
           tanggalSelesaiObat: new Date(
             formValue.tanggalSelesaiObat
@@ -250,14 +271,15 @@ function Pharmacy() {
       });
 
       if (!res.ok) {
-        throw new Error("Failed to add medication info!");
+        const err = await res.json();
+        throw new Error(err.error || "Failed to add medication info!");
       }
-    } catch (e) {
-      toast.error("Failed to add medication info!");
-    } finally {
+
       toast.success("Medication info added!");
       setShowCreateMedication(false);
       await fetchMedications();
+    } catch (e: any) {
+      toast.error(e.message || "Failed to add medication info!");
     }
   };
 
@@ -270,30 +292,28 @@ function Pharmacy() {
         method: "DELETE",
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to delete medication info!");
-      }
-    } catch (e) {
-      toast.error("Failed to delete medication info!");
-    } finally {
+      if (!res.ok) throw new Error("Failed to delete medication info!");
+
       toast.success("Medication info deleted!");
       await fetchMedications();
+    } catch (e) {
+      toast.error("Failed to delete medication info!");
     }
   };
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Medical Checkup</h1>
+        <h1 className="text-2xl font-bold">
+          {isDoctor ? "Doctor Pharmacy" : "Medical Checkup"}
+        </h1>
       </div>
 
       <div className="flex justify-between">
         {/* User Profile */}
         <div
           className="mb-5 cursor-pointer"
-          onClick={() => {
-            setShowUserList(true);
-          }}
+          onClick={() => setShowUserList(true)}
         >
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -326,7 +346,10 @@ function Pharmacy() {
         {selectedUser && (
           <div>
             <button
-              onClick={() => setShowCreateMedication(true)}
+              onClick={() => {
+                setShowCreateMedication(true);
+                fetchMedicines();
+              }}
               className="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 transition flex items-center gap-2"
             >
               <i className="bi bi-plus-lg"></i>
@@ -378,19 +401,8 @@ function Pharmacy() {
                 onClick={() => setShowUserList(false)}
                 className="text-gray-500 hover:text-gray-700 transition"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  className="w-6 h-6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
@@ -421,11 +433,7 @@ function Pharmacy() {
                     <div className="flex items-center gap-3">
                       <div className="relative">
                         {user.avatar ? (
-                          <img
-                            src={user.avatar}
-                            alt={user.name}
-                            className="w-10 h-10 rounded-full"
-                          />
+                          <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full" />
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 font-bold">
                             {getInitials(user.name)}
@@ -433,12 +441,8 @@ function Pharmacy() {
                         )}
                       </div>
                       <div>
-                        <h4 className="font-medium text-gray-800">
-                          {user.name}
-                        </h4>
-                        <p className="text-sm text-teal-600">
-                          @{user.username}
-                        </p>
+                        <h4 className="font-medium text-gray-800">{user.name}</h4>
+                        <p className="text-sm text-teal-600">@{user.username}</p>
                       </div>
                     </div>
                   </div>
@@ -456,50 +460,47 @@ function Pharmacy() {
       {showCreateMedication && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden">
-            {/* Header */}
             <div className="flex justify-between items-center p-4 border-b">
               <h3 className="text-lg font-semibold">Add Medication</h3>
               <button
                 onClick={() => setShowCreateMedication(false)}
                 className="text-gray-500 hover:text-gray-700 transition"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  className="w-6 h-6"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            {/* Content */}
             <div className="max-h-96 overflow-y-auto">
               <div className="p-4 border-b grid gap-3">
+                {/* Medicine Name with picker */}
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    name="namaObat"
-                    value={formValue.namaObat}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border rounded-lg border-gray-300 focus:outline-none focus:border-teal-500 transition"
-                  />
+                  <label className="block text-xs text-gray-500 mb-1">Medicine Name</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      name="namaObat"
+                      value={formValue.namaObat}
+                      onChange={handleChange}
+                      placeholder="Type or pick from master data"
+                      className="flex-1 px-4 py-2 border rounded-lg border-gray-300 focus:outline-none focus:border-teal-500 transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        fetchMedicines();
+                        setShowMedicineList(true);
+                      }}
+                      className="px-3 py-2 bg-teal-100 text-teal-700 rounded-lg hover:bg-teal-200 transition"
+                    >
+                      Pick
+                    </button>
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    Usage Description
-                  </label>
+                  <label className="block text-xs text-gray-500 mb-1">Usage Description</label>
                   <input
                     type="text"
                     name="keteranganPenggunaan"
@@ -510,9 +511,7 @@ function Pharmacy() {
                 </div>
 
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    Dosage
-                  </label>
+                  <label className="block text-xs text-gray-500 mb-1">Dosage</label>
                   <input
                     type="text"
                     name="dosis"
@@ -523,9 +522,7 @@ function Pharmacy() {
                 </div>
 
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    Usage Per Day
-                  </label>
+                  <label className="block text-xs text-gray-500 mb-1">Usage Per Day</label>
                   <input
                     type="number"
                     name="usagePerDay"
@@ -536,9 +533,7 @@ function Pharmacy() {
                 </div>
 
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    Usage Day
-                  </label>
+                  <label className="block text-xs text-gray-500 mb-1">Usage Day</label>
                   <input
                     type="number"
                     name="usageDay"
@@ -549,9 +544,7 @@ function Pharmacy() {
                 </div>
 
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    Start Use Time
-                  </label>
+                  <label className="block text-xs text-gray-500 mb-1">Start Use Time</label>
                   <input
                     type="datetime-local"
                     name="tanggalMulaiObat"
@@ -562,9 +555,7 @@ function Pharmacy() {
                 </div>
 
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    End Use Time
-                  </label>
+                  <label className="block text-xs text-gray-500 mb-1">End Use Time</label>
                   <input
                     type="datetime-local"
                     name="tanggalSelesaiObat"
@@ -575,44 +566,32 @@ function Pharmacy() {
                 </div>
 
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    Usage Times
-                  </label>
+                  <label className="block text-xs text-gray-500 mb-1">Usage Times</label>
                   <div className="space-y-2">
-                    {formValue.jamPenggunaan.map(
-                      (jam: string, index: number) => (
-                        <div key={index} className="flex gap-2 items-center">
-                          <input
-                            type="time"
-                            value={jam}
-                            onChange={(e) => {
-                              const updated = [...formValue.jamPenggunaan];
-                              updated[index] = e.target.value;
-                              setFormValue((prev) => ({
-                                ...prev,
-                                jamPenggunaan: updated,
-                              }));
-                            }}
-                            className="w-full px-4 py-2 border rounded-lg border-gray-300 focus:outline-none focus:border-teal-500 transition"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const updated = formValue.jamPenggunaan.filter(
-                                (_, i) => i !== index
-                              );
-                              setFormValue((prev) => ({
-                                ...prev,
-                                jamPenggunaan: updated,
-                              }));
-                            }}
-                            className="text-sm text-red-500 hover:underline"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      )
-                    )}
+                    {formValue.jamPenggunaan.map((jam: string, index: number) => (
+                      <div key={index} className="flex gap-2 items-center">
+                        <input
+                          type="time"
+                          value={jam}
+                          onChange={(e) => {
+                            const updated = [...formValue.jamPenggunaan];
+                            updated[index] = e.target.value;
+                            setFormValue((prev) => ({ ...prev, jamPenggunaan: updated }));
+                          }}
+                          className="w-full px-4 py-2 border rounded-lg border-gray-300 focus:outline-none focus:border-teal-500 transition"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = formValue.jamPenggunaan.filter((_, i) => i !== index);
+                            setFormValue((prev) => ({ ...prev, jamPenggunaan: updated }));
+                          }}
+                          className="text-sm text-red-500 hover:underline"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
                     <button
                       type="button"
                       onClick={() =>
@@ -630,7 +609,6 @@ function Pharmacy() {
               </div>
             </div>
 
-            {/* Footer */}
             <div className="flex justify-end items-center p-4 border-b">
               <button
                 onClick={onAddMedication}
@@ -639,6 +617,63 @@ function Pharmacy() {
                 <i className="bi bi-plus-lg"></i>
                 <span>Add Medication</span>
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal for selecting medicine from master data */}
+      {showMedicineList && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="text-lg font-semibold">Select Medicine</h3>
+              <button
+                onClick={() => setShowMedicineList(false)}
+                className="text-gray-500 hover:text-gray-700 transition"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="max-h-96 overflow-y-auto">
+              <div className="sticky top-0 z-10 bg-white p-4 border-b">
+                <div className="relative">
+                  <Search className="absolute top-1/2 left-3 -translate-y-1/2 text-teal-500 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Search medicines..."
+                    value={medicineSearchTerm}
+                    onChange={(e) => setMedicineSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-teal-500 transition"
+                  />
+                </div>
+              </div>
+              {medicines.length > 0 ? (
+                filteredMedicines.map((medicine) => (
+                  <div
+                    key={medicine.id}
+                    onClick={() => handleMedicineSelect(medicine)}
+                    className="p-4 border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium text-gray-800">{medicine.namaObat}</h4>
+                        <p className="text-sm text-teal-600">
+                          Rp {medicine.harga.toLocaleString()}
+                        </p>
+                      </div>
+                      <i className="bi bi-chevron-right text-gray-400"></i>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-6 text-center text-gray-500">
+                  <p>No medicines available</p>
+                  <p className="text-xs mt-1">Ask admin to add medicine master data</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
