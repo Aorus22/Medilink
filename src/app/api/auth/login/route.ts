@@ -7,14 +7,20 @@ import { cookies } from 'next/headers';
 const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
 
-type Role = 'USER' | 'ADMIN';
+type Role = 'USER' | 'ADMIN' | 'DOCTOR';
 
 const setAuthCookie = async (user: any, role: Role) => {
-  const token = jwt.sign(
-    { userId: user.id, username: user.username, role },
-    JWT_SECRET,
-    { expiresIn: '1h' }
-  );
+  const payload: any = { userId: user.id, username: user.username, role };
+
+  if (role === 'DOCTOR') {
+    const doctor = await prisma.doctor.findUnique({
+      where: { userId: user.id },
+      select: { id: true },
+    });
+    if (doctor) payload.doctorId = doctor.id;
+  }
+
+  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
 
   (await cookies()).set({
     name: 'auth_token',
@@ -73,7 +79,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
     }
 
-    const token = await setAuthCookie(user, 'USER');
+    // Check if user is also a doctor
+    const linkedDoctor = await prisma.doctor.findUnique({
+      where: { userId: user.id },
+    });
+    const role: Role = linkedDoctor ? 'DOCTOR' : 'USER';
+
+    const token = await setAuthCookie(user, role);
 
     return NextResponse.json(
       {
@@ -89,7 +101,7 @@ export async function POST(req: NextRequest) {
           birthPlace: user.birthPlace,
           birthDate: user.birthDate,
           phoneNumber: user.phoneNumber,
-          role: 'USER',
+          role,
         },
         token,
       },

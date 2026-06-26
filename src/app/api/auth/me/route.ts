@@ -8,7 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
 interface DecodedToken {
   userId: number;
   email: string;
-  role: 'USER' | 'ADMIN';
+  role: 'USER' | 'ADMIN' | 'DOCTOR';
 }
 
 export async function GET(req: NextRequest) {
@@ -44,7 +44,8 @@ export async function GET(req: NextRequest) {
             birthPlace: null,
             birthDate: null,
             phoneNumber: null,
-            avatar: null
+            avatar: null,
+            doctorId: null,
           },
           token,
         },
@@ -59,6 +60,16 @@ export async function GET(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Get doctorId if role is DOCTOR
+    let doctorId: number | null = null;
+    if (decoded.role === 'DOCTOR') {
+      const doctor = await prisma.doctor.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      });
+      doctorId = doctor?.id ?? null;
     }
 
     return NextResponse.json(
@@ -77,6 +88,7 @@ export async function GET(req: NextRequest) {
           phoneNumber: user.phoneNumber,
           avatar: user.avatar,
           role: decoded.role,
+          doctorId,
         },
         token,
       },

@@ -51,8 +51,8 @@ export async function middleware(req: NextRequest) {
 
   // Handle non-API routes
   try {
-    // Restrict ADMIN to /admin/* only
-    if (decoded.role === 'ADMIN' && !pathname.startsWith('/admin/')) {
+    // Restrict ADMIN/DOCTOR to /admin/* only
+    if ((decoded.role === 'ADMIN' || decoded.role === 'DOCTOR') && !pathname.startsWith('/admin/')) {
       return NextResponse.redirect(new URL('/admin/dashboard', req.url));
     }
 
@@ -62,6 +62,9 @@ export async function middleware(req: NextRequest) {
     }
 
     const response = NextResponse.next();
+    if (decoded.role === 'DOCTOR') {
+      response.headers.set('x-doctor-id', (decoded as any).doctorId?.toString() || '');
+    }
     return response;
   } catch (error) {
     console.error('JWT verification failed:', error);
