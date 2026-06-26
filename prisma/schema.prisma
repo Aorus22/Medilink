@@ -28,6 +28,7 @@ model User {
   phoneNumber  String
   avatar       String
 
+  doctor       Doctor?
   messages Message[] @relation("UserMessages")
   appointments Appointment[]
   historicals  HistoricalData[]
@@ -45,10 +46,13 @@ model Doctor {
   education  String
   experience String
   location   String
+  userId     Int?          @unique
 
+  user         User?          @relation(fields: [userId], references: [id])
   appointments Appointment[]
   messages     Message[] @relation("DoctorMessages")
   practiceHours PracticeHour[]
+  pharmacies   Pharmacy[]
 }
 
 model PracticeHour {
@@ -111,6 +115,15 @@ model HistoricalData {
   user   User @relation(fields: [userId], references: [id])
 }
 
+model Medicine {
+  id        Int      @id @default(autoincrement())
+  namaObat  String
+  harga     Float
+  createdAt DateTime @default(now())
+
+  pharmacies Pharmacy[]
+}
+
 model Pharmacy {
   id                Int      @id @default(autoincrement())
   namaObat          String
@@ -121,9 +134,14 @@ model Pharmacy {
   jamPenggunaan     Json
   tanggalMulaiObat  DateTime
   tanggalSelesaiObat DateTime
+  harga             Float?
+  medicineId        Int?
+  doctorId          Int?
 
-  userId Int
-  user   User @relation(fields: [userId], references: [id])
+  userId   Int
+  user     User     @relation(fields: [userId], references: [id])
+  medicine Medicine? @relation(fields: [medicineId], references: [id])
+  doctor   Doctor?  @relation(fields: [doctorId], references: [id])
 }
 
 model MriTest {
