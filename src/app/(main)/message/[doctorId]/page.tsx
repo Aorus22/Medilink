@@ -30,7 +30,7 @@ export default function DoctorChatPage() {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await fetch(`/api/message/doctor/${doctorId}`);
+        const res = await fetch(`/api/message/detail?doctorId=${doctorId}`);
         const data: Message[] = await res.json();
         setChatMessages(data);
         if (data.length > 0) {
@@ -74,9 +74,10 @@ export default function DoctorChatPage() {
     setMessage("");
 
     try {
-      const res = await fetch(`/api/message/doctor/${doctorId}`, {
+      const res = await fetch("/api/message", {
         method: "POST",
-        body: JSON.stringify({ content: newMessageContent }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ doctorId, content: newMessageContent }),
       });
 
       const savedMessage: Message = await res.json();

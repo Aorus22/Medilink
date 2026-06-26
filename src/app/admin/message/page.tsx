@@ -79,7 +79,7 @@ function UserMessageListPage() {
     const fetchMessages = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/message/user?doctorId=${doctorId}`);
+        const res = await fetch(`/api/message?doctorId=${doctorId}`);
         const data = await res.json();
         setAllMessages(data);
       } catch (error) {

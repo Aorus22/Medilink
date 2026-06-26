@@ -2,11 +2,19 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AllMessageDoctorResponse } from "@/app/api/message/doctor/route";
+
+interface DoctorMessage {
+  doctorId: number;
+  doctorName: string;
+  doctorSpecialty: string;
+  avatar: string | null;
+  lastMessage: string;
+  lastMessageTime: string;
+}
 
 export default function MessageListPage() {
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [allMessage, setAllMessage] = useState<AllMessageDoctorResponse[]>([]);
+  const [allMessage, setAllMessage] = useState<DoctorMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   const [showDoctorList, setShowDoctorList] = useState(false);
@@ -23,7 +31,7 @@ export default function MessageListPage() {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await fetch("/api/message/doctor");
+        const res = await fetch("/api/message");
         const data = await res.json();
         setAllMessage(data);
       } catch (error) {
