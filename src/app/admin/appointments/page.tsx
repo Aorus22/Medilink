@@ -44,8 +44,10 @@ export default function AppointmentPage() {
 
   const handleAcceptAppointment = async (appointmentId: number) => {
     try {
-      const response = await fetch(`/api/appointments/accept/${appointmentId}`, {
-        method: 'POST',
+      const response = await fetch(`/api/appointments/${appointmentId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'confirmed' }),
       });
       if (!response.ok) {
         throw new Error('Failed to accept appointment');
@@ -63,8 +65,10 @@ export default function AppointmentPage() {
 
   const handleRejectAppointment = async (appointmentId: number) => {
     try {
-      const response = await fetch(`/api/appointments/reject/${appointmentId}`, {
+      const response = await fetch(`/api/appointments/${appointmentId}`, {
         method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'rejected' }),
       });
       if (!response.ok) {
         throw new Error('Failed to reject appointment');
@@ -83,7 +87,7 @@ export default function AppointmentPage() {
     if (!confirm('Are you sure you want to delete this appointment?')) return;
 
     try {
-      const response = await fetch(`/api/appointments/delete/${appointmentId}`, {
+      const response = await fetch(`/api/appointments/${appointmentId}`, {
         method: 'DELETE',
       });
       if (!response.ok) {

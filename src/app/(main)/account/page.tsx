@@ -39,11 +39,10 @@ const UserProfilePage: React.FC = () => {
 
     try {
       setLoading(true);
-      const response = await fetch('/api/user/edit', {
+      const response = await fetch('/api/users/me', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': userData.id.toString()
         },
         body: JSON.stringify(userData)
       });

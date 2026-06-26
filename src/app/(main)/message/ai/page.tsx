@@ -51,7 +51,7 @@ export default function AIChatPage() {
           parts: [{ text: msg.content }],
         }));
 
-      const res = await fetch("/api/message/ai-chat", {
+      const res = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userMessage.content, history: historyForApi }),

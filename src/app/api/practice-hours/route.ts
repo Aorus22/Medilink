@@ -3,7 +3,7 @@ import { PrismaClient } from '#/prisma/db';
 
 const prisma = new PrismaClient();
 
-export async function POST(req: NextRequest, { params }: any ) {
+export async function POST(req: NextRequest) {
   const userRole = req.headers.get('x-user-role');
 
   if (userRole !== 'ADMIN') {
@@ -11,25 +11,20 @@ export async function POST(req: NextRequest, { params }: any ) {
   }
 
   try {
-    const doctorId = (await params).doctorId;
-    if (!doctorId) {
-      return NextResponse.json({ error: "Missing ID parameter" }, { status: 400 });
-    }
+    const { doctorId, dayOfWeek, startTime, endTime } = await req.json();
 
-    const { dayOfWeek, startTime, endTime } = await req.json();
-
-    if (!dayOfWeek || !startTime || !endTime) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    if (!doctorId || !dayOfWeek || !startTime || !endTime) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const validDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
     if (!validDays.includes(dayOfWeek)) {
-      return NextResponse.json({ error: "Invalid day of week" }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid day of week' }, { status: 400 });
     }
 
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
     if (!timeRegex.test(startTime) || !timeRegex.test(endTime)) {
-      return NextResponse.json({ error: "Invalid time format" }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid time format' }, { status: 400 });
     }
 
     const newPracticeHour = await prisma.practiceHour.create({

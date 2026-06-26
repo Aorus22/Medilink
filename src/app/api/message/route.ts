@@ -5,11 +5,42 @@ import { getAuthContext } from "@/lib/auth";
 const prisma = new PrismaClient();
 
 // GET /api/message — list conversations (auto-detect role)
+// GET /api/message?last=true — get last message for user (from doctor)
 export async function GET(req: NextRequest) {
   const ctx = await getAuthContext(req);
 
+  const isLast = req.nextUrl.searchParams.get("last") === "true";
+
   try {
     if (ctx.role === "USER") {
+      // ?last=true returns only the most recent doctor message (for rightbar)
+      if (isLast) {
+        const lastMessage = await prisma.message.findFirst({
+          where: {
+            userId: ctx.userId,
+            sender: 'DOCTOR',
+            doctorId: { not: null },
+          },
+          orderBy: { time: "desc" },
+          include: {
+            doctor: { select: { name: true, specialist: true } },
+          },
+        });
+
+        if (!lastMessage) {
+          return NextResponse.json({ message: null });
+        }
+
+        return NextResponse.json({
+          doctorId: lastMessage.doctorId,
+          name: lastMessage.doctor?.name,
+          specialty: lastMessage.doctor?.specialist,
+          avatar: "",
+          lastMessage: lastMessage.content,
+          lastMessageTime: lastMessage.time,
+        });
+      }
+
       const messages = await prisma.message.findMany({
         where: { userId: ctx.userId, doctorId: { not: null } },
         orderBy: { time: "desc" },

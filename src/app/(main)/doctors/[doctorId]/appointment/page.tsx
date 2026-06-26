@@ -75,9 +75,10 @@ export default function DoctorAppointmentPage() {
         return;
       }
 
-      const res = await fetch(`/api/appointments/${doctor.id}`, {
+      const res = await fetch(`/api/appointments`, {
         method: "POST",
         body: JSON.stringify({
+          doctorId: doctor.id,
           date: selectedDate,
           purpose: purpose,
           information: information || "No additional information provided",

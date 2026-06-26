@@ -160,7 +160,7 @@ function MedicalCheckup() {
       try {
         setLoading(true);
         const response = await fetch(
-          `/api/medical-checkup/${selectedUserId}?dataId=${dataId}`,
+          `/api/medical-checkup/data/${dataId}`,
           {
             method: "DELETE",
           }

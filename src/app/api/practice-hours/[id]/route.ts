@@ -11,17 +11,22 @@ export async function DELETE(req: NextRequest, { params }: any) {
   }
 
   try {
-    const { doctorId, practiceHourId } = await params;
+    const { id } = await params;
 
-    if (!doctorId || !practiceHourId) {
-      return NextResponse.json({ error: "Missing doctorId or practiceHourId" }, { status: 400 });
+    if (!id) {
+      return NextResponse.json({ error: 'Missing practice hour id' }, { status: 400 });
+    }
+
+    const practiceHour = await prisma.practiceHour.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!practiceHour) {
+      return NextResponse.json({ error: 'Practice hour not found' }, { status: 404 });
     }
 
     await prisma.practiceHour.delete({
-      where: {
-        id: parseInt(practiceHourId),
-        doctorId: parseInt(doctorId),
-      },
+      where: { id: parseInt(id) },
     });
 
     return NextResponse.json({ message: "Practice hour deleted successfully" }, { status: 200 });

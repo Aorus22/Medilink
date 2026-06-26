@@ -151,7 +151,7 @@ const EditDoctorPage: React.FC = () => {
     if (!confirm("Are you sure you want to delete this practice hour?")) return;
     try {
       setLoading(true);
-      const response = await fetch(`/api/doctors/${doctorId}/practice-hours/${practiceHourId}`, {
+      const response = await fetch(`/api/practice-hours/${practiceHourId}`, {
         method: "DELETE",
       });
       if (!response.ok) {
@@ -172,12 +172,13 @@ const EditDoctorPage: React.FC = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const response = await fetch(`/api/doctors/${doctorId}/practice-hours`, {
+      const response = await fetch(`/api/practice-hours`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          doctorId: doctorId,
           dayOfWeek: newPracticeHour.dayOfWeek,
           startTime: newPracticeHour.startTime,
           endTime: newPracticeHour.endTime,

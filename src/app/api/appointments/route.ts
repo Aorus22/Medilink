@@ -3,6 +3,8 @@ import { PrismaClient } from '#/prisma/db';
 
 const prisma = new PrismaClient();
 
+import { getAuthContext } from '@/lib/auth';
+
 export interface AppointmentResponse {
   id: number;
   userName: string,
@@ -17,60 +19,38 @@ export interface AppointmentResponse {
 }
 
 export async function GET(req: NextRequest) {
-  const userId = req.headers.get('x-user-id');
-  const userRole = req.headers.get('x-user-role');
-
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const ctx = await getAuthContext(req);
 
   try {
-    const queryOptions = userRole === 'ADMIN'
-      ? {
-          include: {
-            doctor: {
-              select: {
-                id: true,
-                name: true,
-                specialist: true,
-                about: true,
-                education: true,
-                experience: true,
-                location: true,
-              },
-            },
-            user: {
-              select: {
-                name: true,
-              }
-            }
-          },
-        }
-      : {
-          where: {
-            userId: parseInt(userId),
-          },
-          include: {
-            doctor: {
-              select: {
-                id: true,
-                name: true,
-                specialist: true,
-                about: true,
-                education: true,
-                experience: true,
-                location: true,
-              },
-            },
-            user: {
-              select: {
-                name: true,
-              }
-            }
-          },
-        };
+    let whereClause: any = {};
 
-    const appointments = await prisma.appointment.findMany(queryOptions as any);
+    if (ctx.role === 'USER') {
+      whereClause = { userId: ctx.userId };
+    } else if (ctx.role === 'DOCTOR' && ctx.doctorId) {
+      whereClause = { doctorId: ctx.doctorId };
+    }
+
+    const appointments = await prisma.appointment.findMany({
+      where: whereClause,
+      include: {
+        doctor: {
+          select: {
+            id: true,
+            name: true,
+            specialist: true,
+            about: true,
+            education: true,
+            experience: true,
+            location: true,
+          },
+        },
+        user: {
+          select: {
+            name: true,
+          }
+        }
+      },
+    });
 
     const formattedAppointments: AppointmentResponse[] = appointments.map((appt: any) => ({
       id: appt.id,
@@ -89,6 +69,41 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error('Error fetching appointments:', error);
     return NextResponse.json({ error: 'Failed to fetch appointments' }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+export async function POST(req: NextRequest) {
+  const ctx = await getAuthContext(req);
+
+  if (ctx.role !== 'USER') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const { doctorId, date, purpose, information } = await req.json();
+
+    if (!doctorId || !date || !purpose || !information) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const newAppointment = await prisma.appointment.create({
+      data: {
+        date: new Date(date),
+        purpose,
+        information,
+        status: 'pending',
+        confirmTime: new Date(),
+        queueNum: 0,
+        userId: ctx.userId,
+        doctorId: parseInt(doctorId),
+      },
+    });
+
+    return NextResponse.json(newAppointment, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to create appointment' }, { status: 500 });
   } finally {
     await prisma.$disconnect();
   }

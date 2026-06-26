@@ -20,7 +20,7 @@ export default function Rightbar() {
 
     const fetchLastMessages = async () => {
       try {
-        const res = await fetch("/api/message/last");
+        const res = await fetch("/api/message?last=true");
         const data = await res.json();
         setLastMessage(data);
       } catch (error) {
