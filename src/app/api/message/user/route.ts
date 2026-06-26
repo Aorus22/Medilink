@@ -1,33 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '#/prisma/db';
+import { getAuthContext } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
-export interface AllMessageUserResponse {
-  userId: number;
-  userName: string;
-  userUsername: string;
-  avatar: string | null;
-  lastMessage: string;
-  lastMessageTime: string;
-}
-
 export async function GET(req: NextRequest) {
-  const userRole = req.headers.get('x-user-role');
+  const ctx = await getAuthContext(req);
 
-  if (userRole !== 'ADMIN') {
+  if (ctx.role !== 'ADMIN' && ctx.role !== 'DOCTOR') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const doctorId = req.nextUrl.searchParams.get('doctorId');
+  let doctorId: number;
 
-  if(!doctorId) {
-    return NextResponse.json({ error: 'Missing doctorId' }, { status: 400 });
+  if (ctx.role === 'DOCTOR') {
+    doctorId = ctx.doctorId!;
+  } else {
+    const paramDoctorId = req.nextUrl.searchParams.get('doctorId');
+    if (!paramDoctorId) {
+      return NextResponse.json({ error: 'Missing doctorId' }, { status: 400 });
+    }
+    doctorId = parseInt(paramDoctorId);
   }
 
   const messages = await prisma.message.findMany({
     where: {
-      doctorId: parseInt(doctorId),
+      doctorId,
     },
     orderBy: {
       time: 'desc',
@@ -44,8 +42,8 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  const seenUsers = new Set();
-  const lastMessages: AllMessageUserResponse[] = [];
+  const seenUsers = new Set<number>();
+  const lastMessages: any[] = [];
 
   for (const msg of messages) {
     if (!msg.userId || seenUsers.has(msg.userId)) continue;

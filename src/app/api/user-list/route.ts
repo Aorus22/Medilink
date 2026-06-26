@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient, User } from '#/prisma/db';
+import { getAuthContext } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest) {
+  const ctx = await getAuthContext(req);
 
-  const userRole = req.headers.get('x-user-role');
-
-  if (userRole !== 'ADMIN') {
+  if (ctx.role !== 'ADMIN' && ctx.role !== 'DOCTOR') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json(formattedUser, { status: 200 });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch doctors' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
   }
 }

@@ -1,25 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '#/prisma/db';
+import { getAuthContext } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest, { params }: any) {
-  const userRole = req.headers.get('x-user-role');
+  const ctx = await getAuthContext(req);
 
-  if (userRole !== "ADMIN") {
+  if (ctx.role !== 'ADMIN' && ctx.role !== 'DOCTOR') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const userId = (await params).userId;
-  const doctorId = req.nextUrl.searchParams.get("doctorId");
+
+  let doctorId: number;
+  if (ctx.role === 'DOCTOR') {
+    doctorId = ctx.doctorId!;
+  } else {
+    const paramDoctorId = req.nextUrl.searchParams.get('doctorId');
+    if (!paramDoctorId) {
+      return NextResponse.json({ error: 'Missing doctorId' }, { status: 400 });
+    }
+    doctorId = parseInt(paramDoctorId);
+  }
 
   if (!userId || !doctorId) {
-    return NextResponse.json({ error: "Missing userId or doctorId" }, { status: 400 });
+    return NextResponse.json({ error: 'Missing userId or doctorId' }, { status: 400 });
   }
 
   const messages = await prisma.message.findMany({
     where: {
-      doctorId: parseInt(doctorId),
+      doctorId,
       userId: parseInt(userId),
     },
     include: {
@@ -37,23 +48,33 @@ export async function GET(req: NextRequest, { params }: any) {
 }
 
 export async function POST(req: NextRequest, { params }: any) {
-  const doctorId = req.nextUrl.searchParams.get("doctorId");
+  const ctx = await getAuthContext(req);
 
-  if (!doctorId) {
-    return NextResponse.json({ error: 'Missing doctorId in query' }, { status: 400 });
+  if (ctx.role !== 'ADMIN' && ctx.role !== 'DOCTOR') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  let doctorId: number;
+  if (ctx.role === 'DOCTOR') {
+    doctorId = ctx.doctorId!;
+  } else {
+    const paramDoctorId = req.nextUrl.searchParams.get('doctorId');
+    if (!paramDoctorId) {
+      return NextResponse.json({ error: 'Missing doctorId' }, { status: 400 });
+    }
+    doctorId = parseInt(paramDoctorId);
   }
 
   const userId = (await params).userId;
-
   if (!userId) {
-    return NextResponse.json({ error: "Missing userId" }, { status: 400 });
+    return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
   }
 
   const body = await req.json();
   const { content } = body;
 
-  if (!content || content.trim() === "") {
-    return NextResponse.json({ error: "Message content is required" }, { status: 400 });
+  if (!content || content.trim() === '') {
+    return NextResponse.json({ error: 'Message content is required' }, { status: 400 });
   }
 
   try {
@@ -61,7 +82,7 @@ export async function POST(req: NextRequest, { params }: any) {
       data: {
         sender: 'DOCTOR',
         content: content.trim(),
-        doctorId: parseInt(doctorId),
+        doctorId,
         userId: parseInt(userId),
       },
       include: {
@@ -76,7 +97,7 @@ export async function POST(req: NextRequest, { params }: any) {
 
     return NextResponse.json(newMessage, { status: 201 });
   } catch (error) {
-    console.error("Failed to save message:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error('Failed to save message:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
