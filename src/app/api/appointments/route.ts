@@ -22,6 +22,8 @@ export async function GET(req: NextRequest) {
   const ctx = await getAuthContext(req);
 
   try {
+    const isUpcoming = req.nextUrl.searchParams.get("upcoming") === "true";
+
     let whereClause: any = {};
 
     if (ctx.role === 'USER') {
@@ -30,8 +32,17 @@ export async function GET(req: NextRequest) {
       whereClause = { doctorId: ctx.doctorId };
     }
 
+    if (isUpcoming && ctx.role === 'USER') {
+      whereClause = {
+        ...whereClause,
+        date: { gt: new Date() },
+      };
+    }
+
     const appointments = await prisma.appointment.findMany({
       where: whereClause,
+      orderBy: isUpcoming ? { date: 'asc' } : { id: 'desc' },
+      take: isUpcoming ? 3 : undefined,
       include: {
         doctor: {
           select: {

@@ -63,30 +63,95 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userId =
-    ctx.role === "ADMIN"
-      ? req.nextUrl.searchParams.get("userId")
-      : req.headers.get("x-user-id");
-
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const body = await req.json();
-
   try {
-    const newMedication = await prisma.pharmacy.create({
+    const body = await req.json();
+    const {
+      userId,
+      medicineId,
+      namaObat,
+      keteranganPenggunaan,
+      dosis,
+      usagePerDay,
+      usageDay,
+      jamPenggunaan,
+      tanggalMulaiObat,
+      tanggalSelesaiObat,
+    } = body;
+
+    if (!userId || !namaObat?.trim()) {
+      return NextResponse.json(
+        { error: "userId and namaObat are required" },
+        { status: 400 }
+      );
+    }
+
+    if (!keteranganPenggunaan?.trim() || !dosis?.trim()) {
+      return NextResponse.json(
+        { error: "keteranganPenggunaan and dosis are required" },
+        { status: 400 }
+      );
+    }
+
+    if (!usagePerDay || !usageDay || !tanggalMulaiObat || !tanggalSelesaiObat) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    let doctorId: number | null = null;
+    if (ctx.role === "DOCTOR") {
+      doctorId = ctx.doctorId!;
+    } else if (ctx.role === "ADMIN" && body.doctorId) {
+      doctorId = parseInt(body.doctorId);
+    }
+
+    let harga: number | null = null;
+    if (medicineId) {
+      const medicine = await prisma.medicine.findUnique({
+        where: { id: parseInt(medicineId) },
+      });
+      if (medicine) {
+        harga = medicine.harga;
+      }
+    }
+
+    const medication = await prisma.pharmacy.create({
       data: {
         userId: parseInt(userId),
-        doctorId: ctx.doctorId || body.doctorId || null,
-        ...body,
+        namaObat: namaObat.trim(),
+        keteranganPenggunaan: keteranganPenggunaan.trim(),
+        dosis: dosis.trim(),
+        usagePerDay: parseInt(usagePerDay),
+        usageDay: parseInt(usageDay),
+        jamPenggunaan,
+        tanggalMulaiObat: new Date(tanggalMulaiObat),
+        tanggalSelesaiObat: new Date(tanggalSelesaiObat),
+        medicineId: medicineId ? parseInt(medicineId) : null,
+        doctorId,
+        harga,
       },
     });
 
-    return NextResponse.json(newMedication, { status: 200 });
-  } catch {
+    try {
+      await fetch("http://localhost:3000/api/vending-machine/mock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          medicineName: namaObat,
+          quantity: usagePerDay * usageDay,
+          patientId: userId,
+        }),
+      });
+    } catch {
+      // Vending machine call is non-blocking
+    }
+
+    return NextResponse.json(medication, { status: 201 });
+  } catch (e) {
+    console.error("Error creating medication:", e);
     return NextResponse.json(
-      { error: "Failed to create medication data" },
+      { error: "Failed to create medication" },
       { status: 500 }
     );
   } finally {

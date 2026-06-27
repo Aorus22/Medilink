@@ -5,15 +5,21 @@ const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest) {
   try {
+    const userRole = req.headers.get('x-user-role');
     const userId = req.headers.get('x-user-id');
 
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Admin can filter by userId via query param
+    const targetUserId = (userRole === 'ADMIN')
+      ? (req.nextUrl.searchParams.get('userId') || userId)
+      : userId;
+
     const historicalData = await prisma.historicalData.findMany({
       where: {
-        userId: parseInt(userId),
+        userId: parseInt(targetUserId),
       },
       orderBy: {
         date: 'desc',

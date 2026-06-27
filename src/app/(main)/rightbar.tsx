@@ -8,7 +8,7 @@ export default function Rightbar() {
   useEffect(() => {
     const fetchAppointment = async () => {
       try {
-        const res = await fetch("/api/appointments/upcoming");
+        const res = await fetch("/api/appointments?upcoming=true");
         const data = await res.json();
         setUpcomingAppointment(data);
       } catch (error) {

@@ -96,7 +96,7 @@ function MedicalCheckup() {
 
       try {
         setLoading(true);
-        const response = await fetch(`/api/medical-checkup/${selectedUserId}`);
+        const response = await fetch(`/api/medical-checkup?userId=${selectedUserId}`);
         if (!response.ok) {
           throw new Error("Failed to fetch medical checkup data");
         }
@@ -160,7 +160,7 @@ function MedicalCheckup() {
       try {
         setLoading(true);
         const response = await fetch(
-          `/api/medical-checkup/data/${dataId}`,
+          `/api/medical-checkup/${dataId}`,
           {
             method: "DELETE",
           }

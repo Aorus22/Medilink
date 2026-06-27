@@ -257,7 +257,7 @@ function Pharmacy() {
       return toast.error("Start use time must be before end use time.");
 
     try {
-      const res = await fetch(`/api/pharmacy/prescribe`, {
+      const res = await fetch(`/api/pharmacy`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
