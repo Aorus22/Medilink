@@ -3,7 +3,7 @@
 import { User } from "#/prisma/db";
 import { MedicationInfo } from "@/app/api/pharmacy/route";
 import Table from "@/components/Table";
-import { Search, Trash2 } from "lucide-react";
+import { Search, Trash2, Bell } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -301,6 +301,19 @@ function Pharmacy() {
     }
   };
 
+  const onRemind = async (id: number) => {
+    try {
+      const res = await fetch(`/api/pharmacy/${id}/remind`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send reminder");
+      toast.success(`Reminder sent! (jam ${data.sentAt})`);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to send reminder!");
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -379,6 +392,13 @@ function Pharmacy() {
           rowClassName={() => "hover:bg-teal-50"}
           actions={(data: MedicationInfo) => (
             <div className="flex gap-2">
+              <button
+                onClick={() => onRemind(data.id)}
+                className="p-2 text-teal-600 hover:bg-teal-50 rounded-full transition"
+                title="Send reminder now"
+              >
+                <Bell size={18} />
+              </button>
               <button
                 onClick={() => onDeleteMedication(data.id)}
                 className="p-2 text-red-600 hover:bg-red-50 rounded-full transition"

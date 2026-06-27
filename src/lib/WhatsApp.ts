@@ -47,3 +47,32 @@ export function buildReminderMessage(params: {
 }): string {
   return `Halo ${params.patientName}, jangan lupa minum obat ${params.medicineName} ${params.dosage} pada jam ${params.time}. Sehat selalu!`;
 }
+
+export function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour >= 0 && hour < 12) return "pagi";
+  if (hour >= 12 && hour < 16) return "siang";
+  if (hour >= 16 && hour < 19) return "sore";
+  return "malam";
+}
+
+export function getNearestTime(times: string[]): string {
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const sorted = [...times].sort();
+  for (const t of sorted) {
+    const [h, m] = t.split(":").map(Number);
+    if (h * 60 + m > currentMinutes) return t;
+  }
+  return sorted[0] || "00:00";
+}
+
+export function buildManualReminderMessage(params: {
+  patientName: string;
+  medicineName: string;
+  nearestTime: string;
+}): string {
+  const greeting = getGreeting();
+  return `Selamat ${greeting} ${params.patientName}, jangan lupa untuk meminum obat ${params.medicineName} anda pada ${params.nearestTime}.`;
+}
