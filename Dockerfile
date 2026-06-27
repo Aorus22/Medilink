@@ -22,6 +22,7 @@ ENV NODE_ENV=production
 EXPOSE 3000
 EXPOSE 5555
 
+RUN apk add --no-cache supervisor
 RUN bun add @prisma/client prisma@^6.7.0
 
 COPY --from=builder /app/.next/standalone ./
@@ -31,5 +32,8 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/websocket ./websocket
 COPY --from=builder /app/server.ts ./server.ts
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
+COPY --from=builder /app/src/lib ./src/lib
+COPY Daemon ./Daemon
 
-CMD ["sh", "-c", "bunx prisma studio & bun server.ts"]
+CMD ["supervisord", "-c", "/app/Daemon/supervisord.conf"]
