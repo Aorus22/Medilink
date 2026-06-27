@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "#/prisma/db";
 import { getAuthContext } from "@/lib/auth";
-import { sendWhatsApp, buildManualReminderMessage, getNearestTime } from "@/lib/WhatsApp";
+import { sendWhatsApp, buildReminderMessage, getNearestTime } from "@/lib/WhatsApp";
 
 const prisma = new PrismaClient();
 const TEST_PHONE = "+6289636843541";
+
+function parseJamPenggunaan(jam: any): string[] {
+  try {
+    const times = typeof jam === "string" ? JSON.parse(jam) : jam;
+    return Array.isArray(times) ? times : [];
+  } catch {
+    return [];
+  }
+}
 
 export async function POST(req: NextRequest, { params }: any) {
   const ctx = await getAuthContext(req);
@@ -28,28 +37,45 @@ export async function POST(req: NextRequest, { params }: any) {
       return NextResponse.json({ error: "Prescription not found" }, { status: 404 });
     }
 
-    let times: string[];
-    try {
-      times = typeof prescription.jamPenggunaan === "string"
-        ? JSON.parse(prescription.jamPenggunaan as string)
-        : (prescription.jamPenggunaan as string[]);
-    } catch {
-      return NextResponse.json({ error: "Invalid jamPenggunaan format" }, { status: 500 });
-    }
-
-    if (!Array.isArray(times) || times.length === 0) {
+    const triggerTimes = parseJamPenggunaan(prescription.jamPenggunaan);
+    if (triggerTimes.length === 0) {
       return NextResponse.json({ error: "No scheduled times" }, { status: 400 });
     }
 
-    const nearestTime = getNearestTime(times);
+    const nearestTime = getNearestTime(triggerTimes);
+    const now = new Date();
 
-    const message = buildManualReminderMessage({
-      patientName: prescription.user.name,
-      medicineName: prescription.namaObat,
-      nearestTime,
+    // Find ALL active prescriptions for this user that include this time slot
+    const allForUser = await prisma.pharmacy.findMany({
+      where: {
+        userId: prescription.userId,
+        tanggalMulaiObat: { lte: now },
+        tanggalSelesaiObat: { gte: now },
+      },
     });
 
-    console.log(`[MANUAL REMINDER] To: ${TEST_PHONE} | Message: "${message}"`);
+    // Filter prescriptions that include the nearest time
+    const matched = allForUser.filter((rx) => {
+      const times = parseJamPenggunaan(rx.jamPenggunaan);
+      return times.includes(nearestTime);
+    });
+
+    if (matched.length === 0) {
+      return NextResponse.json({ error: "No active prescriptions at this time" }, { status: 400 });
+    }
+
+    const medicines = matched.map((rx) => ({
+      namaObat: rx.namaObat,
+      dosis: rx.dosis,
+    }));
+
+    const message = buildReminderMessage({
+      patientName: prescription.user.name,
+      medicines,
+      time: nearestTime,
+    });
+
+    console.log(`[MANUAL REMINDER] To: ${TEST_PHONE} | User: ${prescription.user.name} @ ${nearestTime} | Meds: ${medicines.length} | "${message}"`);
 
     const result = await sendWhatsApp(TEST_PHONE, message);
 
@@ -64,6 +90,7 @@ export async function POST(req: NextRequest, { params }: any) {
       message: "Reminder sent successfully",
       phone: TEST_PHONE,
       sentAt: nearestTime,
+      medicineCount: medicines.length,
     }, { status: 200 });
   } catch (e) {
     console.error("Error sending reminder:", e);

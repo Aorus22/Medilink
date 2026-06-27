@@ -39,15 +39,6 @@ export async function sendWhatsApp(
   }
 }
 
-export function buildReminderMessage(params: {
-  patientName: string;
-  medicineName: string;
-  dosage: string;
-  time: string;
-}): string {
-  return `Halo ${params.patientName}, jangan lupa minum obat ${params.medicineName} ${params.dosage} pada jam ${params.time}. Sehat selalu!`;
-}
-
 export function getGreeting(): string {
   const hour = new Date().getHours();
   if (hour >= 0 && hour < 12) return "pagi";
@@ -68,11 +59,26 @@ export function getNearestTime(times: string[]): string {
   return sorted[0] || "00:00";
 }
 
-export function buildManualReminderMessage(params: {
+export interface MedicineItem {
+  namaObat: string;
+  dosis: string;
+}
+
+export function buildReminderMessage(params: {
   patientName: string;
-  medicineName: string;
-  nearestTime: string;
+  medicines: MedicineItem[];
+  time: string;
 }): string {
   const greeting = getGreeting();
-  return `Selamat ${greeting} ${params.patientName}, jangan lupa untuk meminum obat ${params.medicineName} anda pada ${params.nearestTime}.`;
+
+  if (params.medicines.length === 1) {
+    const m = params.medicines[0];
+    return `Selamat ${greeting} ${params.patientName}, jangan lupa untuk meminum obat ${m.namaObat} anda pada jam ${params.time}.`;
+  }
+
+  const list = params.medicines
+    .map((m, i) => `${i + 1}. ${m.namaObat} — ${m.dosis}`)
+    .join("\n");
+
+  return `Selamat ${greeting} ${params.patientName}, jangan lupa untuk meminum obat anda pada jam ${params.time}:\n${list}`;
 }

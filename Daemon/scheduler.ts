@@ -1,5 +1,5 @@
 import { PrismaClient } from '#/prisma/db';
-import { sendWhatsApp, buildReminderMessage } from '@/lib/WhatsApp';
+import { sendWhatsApp, buildReminderMessage, MedicineItem } from '@/lib/WhatsApp';
 
 const prisma = new PrismaClient();
 const TEST_PHONE = '+6289636843541';
@@ -19,6 +19,15 @@ function isWithinWindow(scheduledTime: string): boolean {
   return diff >= 0 && diff <= 2;
 }
 
+function parseJamPenggunaan(jam: any): string[] {
+  try {
+    const times = typeof jam === 'string' ? JSON.parse(jam) : jam;
+    return Array.isArray(times) ? times : [];
+  } catch {
+    return [];
+  }
+}
+
 async function checkAndRemind() {
   const now = new Date();
 
@@ -36,31 +45,37 @@ async function checkAndRemind() {
 
   const currentTime = getCurrentHHMM();
 
-  for (const rx of prescriptions) {
-    let times: string[];
-    try {
-      times = typeof rx.jamPenggunaan === 'string'
-        ? JSON.parse(rx.jamPenggunaan as string)
-        : (rx.jamPenggunaan as string[]);
-    } catch {
-      continue;
-    }
-    if (!Array.isArray(times)) continue;
+  // Group matched prescriptions by userId + matchedTime
+  const groups = new Map<string, { userName: string; medicines: MedicineItem[] }>();
 
+  for (const rx of prescriptions) {
+    const times = parseJamPenggunaan(rx.jamPenggunaan);
     const matchedTime = times.find(isWithinWindow);
     if (!matchedTime) continue;
 
+    const key = `${rx.userId}@${matchedTime}`;
+    if (!groups.has(key)) {
+      groups.set(key, { userName: rx.user.name, medicines: [] });
+    }
+    groups.get(key)!.medicines.push({
+      namaObat: rx.namaObat,
+      dosis: rx.dosis,
+    });
+  }
+
+  for (const [key, group] of groups) {
+    const [, matchedTime] = key.split('@');
+
     const message = buildReminderMessage({
-      patientName: rx.user.name,
-      medicineName: rx.namaObat,
-      dosage: rx.dosis,
+      patientName: group.userName,
+      medicines: group.medicines,
       time: matchedTime,
     });
 
     const result = await sendWhatsApp(TEST_PHONE, message);
     const status = result.success ? 'SENT' : 'FAILED';
     console.log(
-      `[${new Date().toISOString()}] [${status}] ${rx.user.name} - ${rx.namaObat} ${rx.dosis} @ ${matchedTime}` +
+      `[${new Date().toISOString()}] [${status}] ${group.userName} @ ${matchedTime} (${group.medicines.length} obat): "${message}"` +
       (result.error ? ` (${result.error})` : '')
     );
   }
