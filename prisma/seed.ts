@@ -135,18 +135,6 @@ async function main() {
     console.log("Linked Dr. Amanda Wilson to user dr.amanda");
   }
 
-  // Link Dr. Michael Chen to marko123 for testing (so marko also has doctor access)
-  const doctorMichael = await prisma.doctor.findFirst({ where: { name: "Dr. Michael Chen" } });
-  const markoUser = await prisma.user.findFirst({ where: { username: "marko123" } });
-
-  if (doctorMichael && markoUser) {
-    await prisma.doctor.update({
-      where: { id: doctorMichael.id },
-      data: { userId: markoUser.id },
-    });
-    console.log("Linked Dr. Michael Chen to user marko123");
-  }
-
   const user = await prisma.user.findFirst({ where: { name: "Marko Refianto" } });
   const doctor1 = doctorAmanda;
 
