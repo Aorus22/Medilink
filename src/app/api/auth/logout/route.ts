@@ -12,8 +12,8 @@ export async function POST(req: NextRequest) {
     path: '/',
     expires: new Date(0),
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: false,
+    sameSite: 'lax',
   });
 
   const response = NextResponse.json(
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
   response.headers.set(
     'Set-Cookie',
-    'auth_token=; Max-Age=0; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict'
+    'auth_token=; Max-Age=0; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax'
   );
 
   return response;

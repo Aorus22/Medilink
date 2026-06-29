@@ -9,7 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
 
 type Role = 'USER' | 'ADMIN' | 'DOCTOR';
 
-const setAuthCookie = async (user: any, role: Role) => {
+const setAuthCookie = async (user: any, role: Role, secure: boolean) => {
   const payload: any = { userId: user.id, username: user.username, role };
 
   if (role === 'DOCTOR') {
@@ -26,8 +26,8 @@ const setAuthCookie = async (user: any, role: Role) => {
     name: 'auth_token',
     value: token,
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure,
+    sameSite: 'lax',
     maxAge: 3600,
   });
 
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
         phoneNumber: null,
       };
 
-      const token = await setAuthCookie(adminUser, 'ADMIN');
+      const token = await setAuthCookie(adminUser, 'ADMIN', false);
       return NextResponse.json(
         {
           message: 'Admin login successful',
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
     });
     const role: Role = linkedDoctor ? 'DOCTOR' : 'USER';
 
-    const token = await setAuthCookie(user, role);
+    const token = await setAuthCookie(user, role, false);
 
     return NextResponse.json(
       {

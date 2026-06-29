@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Handle special admin case
-    if (decoded.userId === 999999 && decoded.email === 'admin@admin.com') {
+    if (decoded.userId === 999999) {
       return NextResponse.json(
         {
           message: 'Token is valid',
