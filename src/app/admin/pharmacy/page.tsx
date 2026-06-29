@@ -3,13 +3,14 @@
 import { User } from "#/prisma/db";
 import { MedicationInfo } from "@/app/api/pharmacy/route";
 import Table from "@/components/Table";
-import { Search, Trash2, Bell } from "lucide-react";
+import { Search, Trash2, Bell, Pencil } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Suspense, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import SearchableSelect from "@/components/SearchableSelect";
+import ConfirmModal from "@/components/ConfirmModal";
 
 const getInitials = (name: string) => {
   return name
@@ -91,6 +92,7 @@ function Pharmacy() {
 
   // Modal medication creation
   const [showCreateMedication, setShowCreateMedication] = useState(false);
+  const [editingMedicationId, setEditingMedicationId] = useState<number | null>(null);
   const [formValue, setFormValue] = useState({
     namaObat: "",
     medicineId: "",
@@ -98,7 +100,7 @@ function Pharmacy() {
     dosis: "",
     usagePerDay: 1,
     usageDay: 1,
-    jamPenggunaan: [] as string[],
+    jamPenggunaan: [""] as string[],
     tanggalMulaiObat: "",
     tanggalSelesaiObat: "",
   });
@@ -107,6 +109,16 @@ function Pharmacy() {
   const [medicines, setMedicines] = useState<{ id: number; namaObat: string; harga: number }[]>([]);
 
   const [medications, setMedications] = useState([]);
+
+  // Confirm modal state
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    title: string;
+    description?: string;
+    confirmText?: string;
+    cancelText?: string;
+    onConfirm: () => void;
+  }>({ open: false, title: "", onConfirm: () => {} });
 
   const pathname = usePathname();
   const router = useRouter();
@@ -263,9 +275,13 @@ function Pharmacy() {
     if (startDate >= endDate)
       return toast.error("Start use time must be before end use time.");
 
+    const isEditing = editingMedicationId !== null;
+    const url = isEditing ? `/api/pharmacy/${editingMedicationId}` : `/api/pharmacy`;
+    const method = isEditing ? "PUT" : "POST";
+
     try {
-      const res = await fetch(`/api/pharmacy`, {
-        method: "POST",
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formValue,
@@ -279,46 +295,84 @@ function Pharmacy() {
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Failed to add medication info!");
+        throw new Error(err.error || "Failed to save medication info!");
       }
 
-      toast.success("Medication info added!");
+      toast.success(isEditing ? "Medication info updated!" : "Medication info added!");
       setShowCreateMedication(false);
+      setEditingMedicationId(null);
       await fetchMedications();
     } catch (e: any) {
-      toast.error(e.message || "Failed to add medication info!");
+      toast.error(e.message || "Failed to save medication info!");
     }
   };
 
-  const onDeleteMedication = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this medication info?"))
-      return;
-
-    try {
-      const res = await fetch(`/api/pharmacy/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!res.ok) throw new Error("Failed to delete medication info!");
-
-      toast.success("Medication info deleted!");
-      await fetchMedications();
-    } catch (e) {
-      toast.error("Failed to delete medication info!");
-    }
+  const onDeleteMedication = (id: number) => {
+    setConfirmModal({
+      open: true,
+      title: "Hapus data obat?",
+      description: "Data yang sudah dihapus tidak bisa dikembalikan.",
+      onConfirm: async () => {
+        setConfirmModal((p) => ({ ...p, open: false }));
+        try {
+          const res = await fetch(`/api/pharmacy/${id}`, {
+            method: 'DELETE',
+          });
+          if (!res.ok) throw new Error("Failed to delete medication info!");
+          toast.success("Medication info deleted!");
+          await fetchMedications();
+        } catch (e) {
+          toast.error("Failed to delete medication info!");
+        }
+      },
+    });
   };
 
-  const onRemind = async (id: number) => {
-    try {
-      const res = await fetch(`/api/pharmacy/${id}/remind`, {
-        method: 'POST',
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to send reminder");
-      toast.success(`Reminder sent! (jam ${data.sentAt})`);
-    } catch (e: any) {
-      toast.error(e.message || "Failed to send reminder!");
-    }
+  const handleEdit = (data: MedicationInfo) => {
+    setFormValue({
+      namaObat: data.namaObat,
+      medicineId: String(data.medicineId || ""),
+      keteranganPenggunaan: data.keteranganPenggunaan,
+      dosis: data.dosis,
+      usagePerDay: data.usagePerDay,
+      usageDay: data.usageDay,
+      jamPenggunaan: Array.isArray(data.jamPenggunaan)
+        ? data.jamPenggunaan as string[]
+        : typeof data.jamPenggunaan === "string"
+          ? JSON.parse(data.jamPenggunaan)
+          : [""],
+      tanggalMulaiObat: data.tanggalMulaiObat
+        ? new Date(data.tanggalMulaiObat).toISOString().slice(0, 16)
+        : "",
+      tanggalSelesaiObat: data.tanggalSelesaiObat
+        ? new Date(data.tanggalSelesaiObat).toISOString().slice(0, 16)
+        : "",
+    });
+    setEditingMedicationId(data.id);
+    setShowCreateMedication(true);
+    fetchMedicines();
+  };
+
+  const onRemind = (id: number) => {
+    setConfirmModal({
+      open: true,
+      title: "Kirim pengingat sekarang?",
+      description: "Pesan akan dikirim ke nomor uji coba +6289636843541.",
+      confirmText: "Ya, Kirim",
+      onConfirm: async () => {
+        setConfirmModal((p) => ({ ...p, open: false }));
+        try {
+          const res = await fetch(`/api/pharmacy/${id}/remind`, {
+            method: 'POST',
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to send reminder");
+          toast.success(`Reminder sent! (jam ${data.sentAt})`);
+        } catch (e: any) {
+          toast.error(e.message || "Failed to send reminder!");
+        }
+      },
+    });
   };
 
   return (
@@ -367,6 +421,18 @@ function Pharmacy() {
           <div>
             <button
               onClick={() => {
+                setEditingMedicationId(null);
+                setFormValue({
+                  namaObat: "",
+                  medicineId: "",
+                  keteranganPenggunaan: "",
+                  dosis: "",
+                  usagePerDay: 1,
+                  usageDay: 1,
+                  jamPenggunaan: [""] as string[],
+                  tanggalMulaiObat: "",
+                  tanggalSelesaiObat: "",
+                });
                 setShowCreateMedication(true);
                 fetchMedicines();
               }}
@@ -405,6 +471,13 @@ function Pharmacy() {
                 title="Send reminder now"
               >
                 <Bell size={18} />
+              </button>
+              <button
+                onClick={() => handleEdit(data)}
+                className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition"
+                title="Edit medication"
+              >
+                <Pencil size={18} />
               </button>
               <button
                 onClick={() => onDeleteMedication(data.id)}
@@ -488,9 +561,12 @@ function Pharmacy() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden">
             <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="text-lg font-semibold">Add Medication</h3>
+              <h3 className="text-lg font-semibold">{editingMedicationId ? "Edit Medication" : "Add Medication"}</h3>
               <button
-                onClick={() => setShowCreateMedication(false)}
+                onClick={() => {
+                  setShowCreateMedication(false);
+                  setEditingMedicationId(null);
+                }}
                 className="text-gray-500 hover:text-gray-700 transition"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
@@ -611,12 +687,22 @@ function Pharmacy() {
                 className="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 transition flex items-center gap-2"
               >
                 <i className="bi bi-plus-lg"></i>
-                <span>Add Medication</span>
+                <span>{editingMedicationId ? "Update Medication" : "Add Medication"}</span>
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={confirmModal.open}
+        title={confirmModal.title}
+        description={confirmModal.description}
+        confirmText={confirmModal.confirmText || "Ya"}
+        cancelText={confirmModal.cancelText || "Batal"}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal((p) => ({ ...p, open: false }))}
+      />
     </div>
   );
 }
