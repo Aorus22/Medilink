@@ -64,7 +64,10 @@ function UserMessageListPage() {
   );
 
   useEffect(() => {
-    if (!doctorId) return;
+    if (!doctorId) {
+      setLoading(false);
+      return;
+    }
 
     const fetchDoctor = async () => {
       try {

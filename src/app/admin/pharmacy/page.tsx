@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Suspense, useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import SearchableSelect from "@/components/SearchableSelect";
 
 const getInitials = (name: string) => {
   return name
@@ -92,6 +93,7 @@ function Pharmacy() {
   const [showCreateMedication, setShowCreateMedication] = useState(false);
   const [formValue, setFormValue] = useState({
     namaObat: "",
+    medicineId: "",
     keteranganPenggunaan: "",
     dosis: "",
     usagePerDay: 1,
@@ -103,8 +105,6 @@ function Pharmacy() {
 
   // Master data medicines
   const [medicines, setMedicines] = useState<{ id: number; namaObat: string; harga: number }[]>([]);
-  const [showMedicineList, setShowMedicineList] = useState(false);
-  const [medicineSearchTerm, setMedicineSearchTerm] = useState("");
 
   const [medications, setMedications] = useState([]);
 
@@ -122,7 +122,7 @@ function Pharmacy() {
     }
   }, [searchParams]);
 
-  // Fetch master medicines
+  // Fetch master medicines on mount
   const fetchMedicines = async () => {
     try {
       const res = await fetch("/api/medicine");
@@ -133,6 +133,10 @@ function Pharmacy() {
       console.error("Failed to fetch medicines");
     }
   };
+
+  useEffect(() => {
+    fetchMedicines();
+  }, []);
 
   // Fetch users when showing user list
   useEffect(() => {
@@ -201,30 +205,33 @@ function Pharmacy() {
       user.username.toLowerCase().includes(userSearchTerm.toLowerCase())
   );
 
-  const filteredMedicines = medicines.filter((m) =>
-    m.namaObat.toLowerCase().includes(medicineSearchTerm.toLowerCase())
-  );
-
   const handleUserSelect = (user: User) => {
     router.push(`${pathname}?userId=${user.id}`);
     setSelectedUserId(user.id);
     setShowUserList(false);
   };
 
-  const handleMedicineSelect = (medicine: { id: number; namaObat: string; harga: number }) => {
+  const handleMedicineSelect = (medicineId: string) => {
+    const medicine = medicines.find((m) => String(m.id) === medicineId);
+    if (!medicine) return;
     setFormValue((prev) => ({
       ...prev,
       namaObat: medicine.namaObat,
+      medicineId,
     }));
-    setShowMedicineList(false);
   };
 
   const handleChange = (e: any) => {
     const { name, value, type } = e.target;
-    setFormValue((prev) => ({
-      ...prev,
-      [name]: type === "number" ? Number(value) : value,
-    }));
+    const parsedValue = type === "number" ? Number(value) : value;
+    setFormValue((prev) => {
+      const next = { ...prev, [name]: parsedValue };
+      if (name === "usagePerDay") {
+        const count = Math.max(0, Number(parsedValue) || 0);
+        next.jamPenggunaan = Array.from({ length: count }, (_, i) => prev.jamPenggunaan[i] || "");
+      }
+      return next;
+    });
   };
 
   const onAddMedication = async () => {
@@ -493,31 +500,21 @@ function Pharmacy() {
             </div>
 
             <div className="max-h-96 overflow-y-auto">
-              <div className="p-4 border-b grid gap-3">
-                {/* Medicine Name with picker */}
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Medicine Name</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      name="namaObat"
-                      value={formValue.namaObat}
-                      onChange={handleChange}
-                      placeholder="Type or pick from master data"
-                      className="flex-1 px-4 py-2 border rounded-lg border-gray-300 focus:outline-none focus:border-teal-500 transition"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        fetchMedicines();
-                        setShowMedicineList(true);
-                      }}
-                      className="px-3 py-2 bg-teal-100 text-teal-700 rounded-lg hover:bg-teal-200 transition"
-                    >
-                      Pick
-                    </button>
-                  </div>
-                </div>
+                <div className="p-4 border-b grid gap-3">
+                  {/* Medicine Name — searchable select from master data */}
+                  <SearchableSelect
+                    label="Medicine Name"
+                    placeholder="Pilih obat..."
+                    searchPlaceholder="Cari obat..."
+                    emptyMessage="Obat tidak ditemukan"
+                    options={medicines.map((m) => ({
+                      value: String(m.id),
+                      label: m.namaObat,
+                      subtitle: `Rp${m.harga.toLocaleString()}`,
+                    }))}
+                    value={formValue.medicineId}
+                    onChange={handleMedicineSelect}
+                  />
 
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">Usage Description</label>
@@ -586,44 +583,23 @@ function Pharmacy() {
                 </div>
 
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Usage Times</label>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    Usage Times {formValue.usagePerDay > 0 && `(${formValue.usagePerDay}x per day)`}
+                  </label>
                   <div className="space-y-2">
                     {formValue.jamPenggunaan.map((jam: string, index: number) => (
-                      <div key={index} className="flex gap-2 items-center">
-                        <input
-                          type="time"
-                          value={jam}
-                          onChange={(e) => {
-                            const updated = [...formValue.jamPenggunaan];
-                            updated[index] = e.target.value;
-                            setFormValue((prev) => ({ ...prev, jamPenggunaan: updated }));
-                          }}
-                          className="w-full px-4 py-2 border rounded-lg border-gray-300 focus:outline-none focus:border-teal-500 transition"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const updated = formValue.jamPenggunaan.filter((_, i) => i !== index);
-                            setFormValue((prev) => ({ ...prev, jamPenggunaan: updated }));
-                          }}
-                          className="text-sm text-red-500 hover:underline"
-                        >
-                          Remove
-                        </button>
-                      </div>
+                      <input
+                        key={index}
+                        type="time"
+                        value={jam}
+                        onChange={(e) => {
+                          const updated = [...formValue.jamPenggunaan];
+                          updated[index] = e.target.value;
+                          setFormValue((prev) => ({ ...prev, jamPenggunaan: updated }));
+                        }}
+                        className="w-full px-4 py-2 border rounded-lg border-gray-300 focus:outline-none focus:border-teal-500 transition"
+                      />
                     ))}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormValue((prev) => ({
-                          ...prev,
-                          jamPenggunaan: [...prev.jamPenggunaan, ""],
-                        }))
-                      }
-                      className="text-sm text-teal-600 hover:underline mt-2"
-                    >
-                      + Add Time
-                    </button>
                   </div>
                 </div>
               </div>
@@ -637,63 +613,6 @@ function Pharmacy() {
                 <i className="bi bi-plus-lg"></i>
                 <span>Add Medication</span>
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal for selecting medicine from master data */}
-      {showMedicineList && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden">
-            <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="text-lg font-semibold">Select Medicine</h3>
-              <button
-                onClick={() => setShowMedicineList(false)}
-                className="text-gray-500 hover:text-gray-700 transition"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="max-h-96 overflow-y-auto">
-              <div className="sticky top-0 z-10 bg-white p-4 border-b">
-                <div className="relative">
-                  <Search className="absolute top-1/2 left-3 -translate-y-1/2 text-teal-500 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="Search medicines..."
-                    value={medicineSearchTerm}
-                    onChange={(e) => setMedicineSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:border-teal-500 transition"
-                  />
-                </div>
-              </div>
-              {medicines.length > 0 ? (
-                filteredMedicines.map((medicine) => (
-                  <div
-                    key={medicine.id}
-                    onClick={() => handleMedicineSelect(medicine)}
-                    className="p-4 border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium text-gray-800">{medicine.namaObat}</h4>
-                        <p className="text-sm text-teal-600">
-                          Rp {medicine.harga.toLocaleString()}
-                        </p>
-                      </div>
-                      <i className="bi bi-chevron-right text-gray-400"></i>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-6 text-center text-gray-500">
-                  <p>No medicines available</p>
-                  <p className="text-xs mt-1">Ask admin to add medicine master data</p>
-                </div>
-              )}
             </div>
           </div>
         </div>

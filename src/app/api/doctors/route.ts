@@ -35,7 +35,8 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json(doctorsData, { status: 200 });
-  } catch {
+  } catch (error) {
+    console.error('Error fetching doctors:', error);
     return NextResponse.json({ error: 'Failed to fetch doctors' }, { status: 500 });
   } finally {
     await prisma.$disconnect();
