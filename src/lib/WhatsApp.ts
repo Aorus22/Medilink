@@ -1,31 +1,28 @@
-const WA_API_URL = process.env.WA_API_URL || "";
-const WA_API_KEY = process.env.WA_API_KEY || "";
+const API_BASE_URL = process.env.WHATSAPP_API_BASE_URL || "";
+const API_SECRET = process.env.WHATSAPP_API_SECRET || "";
 
-export interface WhatsAppMessage {
-  phoneNumber: string;
-  message: string;
+export function toJID(phoneNumber: string): string {
+  return `${phoneNumber.replace(/[^0-9]/g, "")}@s.whatsapp.net`;
 }
 
 export async function sendWhatsApp(
   phoneNumber: string,
   message: string
-): Promise<{ success: boolean; error?: string }> {
-  if (!WA_API_URL || !WA_API_KEY) {
+): Promise<{ success: boolean; id?: string; error?: string }> {
+  if (!API_BASE_URL || !API_SECRET) {
     console.warn("WhatsApp API not configured. Skipping send.");
-    return { success: false, error: "WA_API_URL or WA_API_KEY not set" };
+    return { success: false, error: "WHATSAPP_API_BASE_URL or WHATSAPP_API_SECRET not set" };
   }
 
   try {
-    const res = await fetch(WA_API_URL, {
+    const res = await fetch(`${API_BASE_URL}/send-message`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${WA_API_KEY}`,
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        phoneNumber,
+        secret: API_SECRET,
+        target: toJID(phoneNumber),
         message,
-      } satisfies WhatsAppMessage),
+      }),
     });
 
     if (!res.ok) {
@@ -33,7 +30,8 @@ export async function sendWhatsApp(
       return { success: false, error: err };
     }
 
-    return { success: true };
+    const data = await res.json();
+    return { success: data.status === "success", id: data.id };
   } catch (err: any) {
     return { success: false, error: err.message };
   }

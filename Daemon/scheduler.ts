@@ -2,7 +2,7 @@ import { PrismaClient } from '#/prisma/db';
 import { sendWhatsApp, buildReminderMessage, MedicineItem } from '@/lib/WhatsApp';
 
 const prisma = new PrismaClient();
-const TEST_PHONE = '+6289636843541';
+const TEST_PHONE = "6289636843541";
 const POLL_INTERVAL_MS = 30_000;
 
 function getCurrentHHMM(): string {

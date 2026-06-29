@@ -4,7 +4,7 @@ import { getAuthContext } from "@/lib/auth";
 import { sendWhatsApp, buildReminderMessage, getNearestTime } from "@/lib/WhatsApp";
 
 const prisma = new PrismaClient();
-const TEST_PHONE = "+6289636843541";
+const TEST_PHONE = "6289636843541";
 
 function parseJamPenggunaan(jam: any): string[] {
   try {

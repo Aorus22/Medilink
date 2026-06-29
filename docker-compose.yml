@@ -18,6 +18,8 @@ services:
     restart: always
     environment:
       DATABASE_URL: "postgresql://medilink_user:medilink_password@postgres:5432/medilinkdb?schema=public"
+      WHATSAPP_API_BASE_URL: "${WHATSAPP_API_BASE_URL}"
+      WHATSAPP_API_SECRET: "${WHATSAPP_API_SECRET}"
     ports:
       - 7672:3000
       - 7673:5555
