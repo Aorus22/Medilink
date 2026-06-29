@@ -3,10 +3,7 @@ services:
     image: postgres:16-alpine
     container_name: medilink-postgres
     restart: always
-    environment:
-      POSTGRES_DB: medilinkdb
-      POSTGRES_USER: medilink_user
-      POSTGRES_PASSWORD: medilink_password
+    env_file: .env.db
     ports:
       - 7671:5432
     volumes:
@@ -16,10 +13,7 @@ services:
     image: aorus22/medilink:latest
     container_name: medilink-app
     restart: always
-    environment:
-      DATABASE_URL: "postgresql://medilink_user:medilink_password@postgres:5432/medilinkdb?schema=public"
-      WHATSAPP_API_BASE_URL: "${WHATSAPP_API_BASE_URL}"
-      WHATSAPP_API_SECRET: "${WHATSAPP_API_SECRET}"
+    env_file: .env
     ports:
       - 7672:3000
       - 7673:5555
