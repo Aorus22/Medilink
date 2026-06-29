@@ -421,9 +421,9 @@ function Pharmacy() {
                   },
                 });
               }}
-              className="bg-teal-100 text-teal-700 px-4 py-2 rounded-lg hover:bg-teal-200 transition flex items-center gap-2"
+              className="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 transition flex items-center gap-2"
             >
-              <Bell size={18} />
+              <i className="bi bi-bell"></i>
               <span>Remind All</span>
             </button>
             <button
