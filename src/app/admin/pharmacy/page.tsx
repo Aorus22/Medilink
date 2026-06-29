@@ -353,28 +353,6 @@ function Pharmacy() {
     fetchMedicines();
   };
 
-  const onRemind = (id: number) => {
-    setConfirmModal({
-      open: true,
-      title: "Kirim pengingat sekarang?",
-      description: "Pesan akan dikirim ke nomor uji coba +6289636843541.",
-      confirmText: "Ya, Kirim",
-      onConfirm: async () => {
-        setConfirmModal((p) => ({ ...p, open: false }));
-        try {
-          const res = await fetch(`/api/pharmacy/${id}/remind`, {
-            method: 'POST',
-          });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || "Failed to send reminder");
-          toast.success(`Reminder sent! (jam ${data.sentAt})`);
-        } catch (e: any) {
-          toast.error(e.message || "Failed to send reminder!");
-        }
-      },
-    });
-  };
-
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -418,7 +396,36 @@ function Pharmacy() {
 
         {/* Add Medication */}
         {selectedUser && (
-          <div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setConfirmModal({
+                  open: true,
+                  title: "Kirim pengingat sekarang?",
+                  description: "Mengingatkan semua obat aktif untuk pasien ini. Pesan akan dikirim ke nomor uji coba +6289636843541.",
+                  confirmText: "Ya, Kirim",
+                  onConfirm: async () => {
+                    setConfirmModal((p) => ({ ...p, open: false }));
+                    try {
+                      const res = await fetch(`/api/pharmacy/remind`, {
+                        method: 'POST',
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ userId: selectedUserId }),
+                      });
+                      const data = await res.json();
+                      if (!res.ok) throw new Error(data.error || "Failed to send");
+                      toast.success(data.message);
+                    } catch (e: any) {
+                      toast.error(e.message || "Failed to send reminder!");
+                    }
+                  },
+                });
+              }}
+              className="bg-teal-100 text-teal-700 px-4 py-2 rounded-lg hover:bg-teal-200 transition flex items-center gap-2"
+            >
+              <Bell size={18} />
+              <span>Remind All</span>
+            </button>
             <button
               onClick={() => {
                 setEditingMedicationId(null);
@@ -465,13 +472,6 @@ function Pharmacy() {
           rowClassName={() => "hover:bg-teal-50"}
           actions={(data: MedicationInfo) => (
             <div className="flex gap-2">
-              <button
-                onClick={() => onRemind(data.id)}
-                className="p-2 text-teal-600 hover:bg-teal-50 rounded-full transition"
-                title="Send reminder now"
-              >
-                <Bell size={18} />
-              </button>
               <button
                 onClick={() => handleEdit(data)}
                 className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition"
