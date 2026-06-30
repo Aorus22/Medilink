@@ -3,7 +3,7 @@
 import { User } from "#/prisma/db";
 import { MedicationInfo } from "@/app/api/pharmacy/route";
 import Table from "@/components/Table";
-import { Search, Trash2, Bell, Pencil } from "lucide-react";
+import { Search, Trash2, Pencil } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -11,6 +11,7 @@ import { Suspense, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import SearchableSelect from "@/components/SearchableSelect";
 import ConfirmModal from "@/components/ConfirmModal";
+import { dispenseBatch, DispenseItem } from "@/lib/vending-machine";
 
 const getInitials = (name: string) => {
   return name
@@ -119,6 +120,13 @@ function Pharmacy() {
     cancelText?: string;
     onConfirm: () => void;
   }>({ open: false, title: "", onConfirm: () => {} });
+
+  // Vending machine mode
+  const [vendingMode, setVendingMode] = useState(false);
+  const [dispensedIds, setDispensedIds] = useState<Set<number>>(new Set());
+  const [selectedForDispense, setSelectedForDispense] = useState<number[]>([]);
+  const [dispensing, setDispensing] = useState(false);
+  const [reconfirmId, setReconfirmId] = useState<number | null>(null);
 
   const pathname = usePathname();
   const router = useRouter();
@@ -353,6 +361,63 @@ function Pharmacy() {
     fetchMedicines();
   };
 
+  async function handleDispense() {
+    if (selectedForDispense.length === 0) return toast.error("Pilih item terlebih dahulu.");
+    setDispensing(true);
+
+    const items: DispenseItem[] = selectedForDispense
+      .map((id) => {
+        const rx = medications.find((m: any) => m.id === id) as any;
+        if (!rx) return undefined;
+        return {
+          medicineName: rx.namaObat,
+          quantity: rx.usagePerDay * rx.usageDay,
+          patientId: rx.userId,
+          localId: rx.id,
+        };
+      })
+      .filter((x): x is DispenseItem => !!x);
+
+    const { results } = await dispenseBatch(items);
+    const failed = results.filter((r) => r.error);
+    const ok = results.filter((r) => !r.error);
+
+    if (ok.length > 0) {
+      setDispensedIds((prev) => {
+        const next = new Set(prev);
+        ok.forEach((r) => next.add(r.localId));
+        return next;
+      });
+      setSelectedForDispense([]);
+    }
+
+    if (failed.length > 0) {
+      toast.error(`${failed.length} item gagal: ${failed[0].error}`);
+    }
+    if (ok.length > 0) {
+      toast.success(`${ok.length} item berhasil didispense!`);
+    }
+
+    setDispensing(false);
+  }
+
+  const toggleSelect = (id: number) => {
+    if (dispensedIds.has(id) && !selectedForDispense.includes(id)) {
+      setReconfirmId(id);
+      return;
+    }
+    setSelectedForDispense((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const confirmRedispense = () => {
+    if (reconfirmId !== null) {
+      setSelectedForDispense((prev) => [...prev, reconfirmId]);
+      setReconfirmId(null);
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -425,6 +490,17 @@ function Pharmacy() {
             >
               <i className="bi bi-bell"></i>
               <span>Remind All</span>
+            </button>
+            <button
+              onClick={() => setVendingMode(!vendingMode)}
+              className={`px-4 py-2 rounded-lg transition flex items-center gap-2 ${
+                vendingMode
+                  ? "bg-orange-500 text-white hover:bg-orange-600"
+                  : "bg-amber-100 text-amber-700 hover:bg-amber-200"
+              }`}
+            >
+              <i className="bi bi-shop"></i>
+              <span>{vendingMode ? "Exit Vending" : "Vending Machine"}</span>
             </button>
             <button
               onClick={() => {
@@ -693,6 +769,100 @@ function Pharmacy() {
           </div>
         </div>
       )}
+
+      {vendingMode && (
+        <div className="mt-6 bg-white rounded-xl shadow-lg border border-amber-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-4 flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-bold flex items-center gap-2">
+                <i className="bi bi-shop"></i>
+                PharmaSwift Vending Machine
+              </h3>
+              <p className="text-sm text-amber-100">
+                Pilih item untuk didispense. Item dengan tanda centang sudah pernah didispense.
+              </p>
+            </div>
+            <span className="text-2xl font-bold">Rp{medications
+              .filter((m: any) => selectedForDispense.includes(m.id))
+              .reduce((sum: number, m: any) => sum + (m.harga || 0), 0)
+              .toLocaleString()}</span>
+          </div>
+
+          <div className="divide-y max-h-80 overflow-y-auto">
+            {(medications as any[]).length === 0 ? (
+              <div className="p-6 text-center text-gray-400">Tidak ada item untuk didispense</div>
+            ) : (
+              (medications as any[]).map((rx: any) => {
+                const isSelected = selectedForDispense.includes(rx.id);
+                const isDispensed = dispensedIds.has(rx.id);
+                return (
+                  <div
+                    key={rx.id}
+                    className={`flex items-center gap-4 px-6 py-3 cursor-pointer transition ${
+                      isSelected ? "bg-amber-50" : "hover:bg-gray-50"
+                    }`}
+                    onClick={() => toggleSelect(rx.id)}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => {}}
+                      className="w-4 h-4 text-amber-600 rounded border-gray-300"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-800">{rx.namaObat}</span>
+                        {isDispensed && (
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <i className="bi bi-check-circle-fill text-xs"></i>
+                            Dispensed
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        {rx.dosis} — {rx.usagePerDay}x{rx.usageDay} hari
+                      </p>
+                    </div>
+                    <span className="font-semibold text-amber-700">Rp{rx.harga?.toLocaleString() || 0}</span>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <div className="border-t px-6 py-4 flex justify-between items-center bg-gray-50">
+            <span className="text-sm text-gray-500">
+              {selectedForDispense.length} item dipilih • Rp
+              {medications
+                .filter((m: any) => selectedForDispense.includes(m.id))
+                .reduce((sum: number, m: any) => sum + (m.harga || 0), 0)
+                .toLocaleString()}
+            </span>
+            <button
+              onClick={handleDispense}
+              disabled={dispensing || selectedForDispense.length === 0}
+              className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-2 rounded-lg hover:opacity-90 transition font-medium disabled:opacity-50 flex items-center gap-2"
+            >
+              {dispensing ? (
+                <span className="inline-block animate-spin">⟳</span>
+              ) : (
+                <i className="bi bi-cpu"></i>
+              )}
+              <span>{dispensing ? "Dispensing..." : "Dispense Selected Items"}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      <ConfirmModal
+        open={reconfirmId !== null}
+        title="Item sudah pernah didispense"
+        description="Obat ini sudah pernah dikeluarkan dari vending machine sebelumnya. Yakin ingin memilih lagi?"
+        confirmText="Ya, Pilih Lagi"
+        cancelText="Batal"
+        onConfirm={confirmRedispense}
+        onCancel={() => setReconfirmId(null)}
+      />
 
       <ConfirmModal
         open={confirmModal.open}
