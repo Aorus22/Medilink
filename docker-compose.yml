@@ -1,17 +1,17 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: medilink-postgres
+    container_name: pharmashift-postgres
     restart: always
     env_file: .env.db
     ports:
       - 7671:5432
     volumes:
-      - medilink-pgdata:/var/lib/postgresql/data
+      - pharmashift-pgdata:/var/lib/postgresql/data
 
   app:
-    image: aorus22/medilink:latest
-    container_name: medilink-app
+    image: aorus22/pharmashift:latest
+    container_name: pharmashift-app
     restart: always
     env_file: .env
     ports:
@@ -21,4 +21,4 @@ services:
       - postgres
 
 volumes:
-  medilink-pgdata:
+  pharmashift-pgdata:

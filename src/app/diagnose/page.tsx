@@ -28,7 +28,7 @@ const Diagnoses = () => {
       <div className="flex items-center justify-between px-5 py-3 bg-white border-b">
         <div className="flex items-center">
           <div className="w-10 h-10 rounded-full bg-red-800"></div>
-          <span className="ml-2 font-bold text-red-800">MedLink Smart UMS</span>
+          <span className="ml-2 font-bold text-red-800">PharmaSwift UMS</span>
         </div>
         <div className="flex space-x-4">
           <span className="text-green-600">Home</span>

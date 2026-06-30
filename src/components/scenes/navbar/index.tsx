@@ -33,14 +33,14 @@ const Navbar = ({ isTopOfPage, selectedPage, setSelectedPage }: Props) => {
             {/* Logo */}
             <div className="flex flex-row w-[300px] sm:w-[400px] justify-start items-center">
               <Image
-                src="/assets/Logo/medlink.png"
+                src="/assets/Logo/pharmashift.png"
                 alt="logo"
                 width={40}
                 height={40}
                 className="h-10 w-13"
               />
               <p className="pl-3 font-montserrat text-lg sm:text-xl font-bold">
-                MedLink Smart UMS
+                PharmaSwift UMS
               </p>
             </div>
 

@@ -2,7 +2,7 @@ import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const logo = '/assets/Logo/medlink.png';
+const logo = '/assets/Logo/pharmashift.png';
 
 export default function Sidebar({setRightbarOpen, setSidebarOpen}: any) {
   const { logout } = useAuth();

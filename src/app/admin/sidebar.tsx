@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 
-const logo = '/assets/Logo/medlink.png';
+const logo = '/assets/Logo/pharmashift.png';
 
 export default function sidebar({setSidebarOpen}: {setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>}) {
   const { logout, user } = useAuth();
