@@ -89,7 +89,7 @@ async function main() {
         studentId: "D200220069",
         birthPlace: "Jakarta",
         birthDate: new Date("2004-04-14"),
-        phoneNumber: "089699521932",
+        phoneNumber: "6289636843541",
         avatar: ""
       },
       {
@@ -102,7 +102,7 @@ async function main() {
         studentId: "D200220015",
         birthPlace: "Wonogiri",
         birthDate: new Date("2002-02-18"),
-        phoneNumber: "085156346402",
+        phoneNumber: "6289636843541",
         avatar: ""
       },
       {
@@ -115,7 +115,7 @@ async function main() {
         studentId: "DOC001",
         birthPlace: "New York",
         birthDate: new Date("1980-05-10"),
-        phoneNumber: "081234567890",
+        phoneNumber: "6289636843541",
         avatar: ""
       },
     ],

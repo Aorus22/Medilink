@@ -2,7 +2,6 @@ import { PrismaClient } from '#/prisma/db';
 import { sendWhatsApp, buildReminderMessage, MedicineItem } from '@/lib/WhatsApp';
 
 const prisma = new PrismaClient();
-const TEST_PHONE = "6289636843541";
 const POLL_INTERVAL_MS = 30_000;
 
 function getCurrentHHMM(): string {
@@ -37,7 +36,7 @@ async function checkAndRemind() {
       tanggalSelesaiObat: { gte: now },
     },
     include: {
-      user: { select: { name: true } },
+      user: { select: { name: true, phoneNumber: true } },
     },
   });
 
@@ -46,7 +45,7 @@ async function checkAndRemind() {
   const currentTime = getCurrentHHMM();
 
   // Group matched prescriptions by userId + matchedTime
-  const groups = new Map<string, { userName: string; medicines: MedicineItem[] }>();
+  const groups = new Map<string, { userName: string; phoneNumber: string; medicines: MedicineItem[] }>();
 
   for (const rx of prescriptions) {
     const times = parseJamPenggunaan(rx.jamPenggunaan);
@@ -55,7 +54,7 @@ async function checkAndRemind() {
 
     const key = `${rx.userId}@${matchedTime}`;
     if (!groups.has(key)) {
-      groups.set(key, { userName: rx.user.name, medicines: [] });
+      groups.set(key, { userName: rx.user.name, phoneNumber: rx.user.phoneNumber, medicines: [] });
     }
     groups.get(key)!.medicines.push({
       namaObat: rx.namaObat,
@@ -72,10 +71,10 @@ async function checkAndRemind() {
       time: matchedTime,
     });
 
-    const result = await sendWhatsApp(TEST_PHONE, message);
+    const result = await sendWhatsApp(group.phoneNumber, message);
     const status = result.success ? 'SENT' : 'FAILED';
     console.log(
-      `[${new Date().toISOString()}] [${status}] ${group.userName} @ ${matchedTime} (${group.medicines.length} obat): "${message}"` +
+      `[${new Date().toISOString()}] [${status}] ${group.userName} @ ${matchedTime} (${group.medicines.length} obat) → ${group.phoneNumber}: "${message}"` +
       (result.error ? ` (${result.error})` : '')
     );
   }

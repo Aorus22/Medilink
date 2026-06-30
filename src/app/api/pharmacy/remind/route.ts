@@ -4,7 +4,6 @@ import { getAuthContext } from "@/lib/auth";
 import { sendWhatsApp, buildReminderMessage, getNearestTime, MedicineItem } from "@/lib/WhatsApp";
 
 const prisma = new PrismaClient();
-const TEST_PHONE = "6289636843541";
 
 function parseJamPenggunaan(jam: any): string[] {
   try {
@@ -32,11 +31,15 @@ export async function POST(req: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { id: parseInt(userId) },
-      select: { name: true },
+      select: { name: true, phoneNumber: true },
     });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    if (!user.phoneNumber) {
+      return NextResponse.json({ error: "User has no phone number" }, { status: 400 });
     }
 
     // All active prescriptions for this user
@@ -73,9 +76,9 @@ export async function POST(req: NextRequest) {
         time: timeSlot,
       });
 
-      console.log(`[BATCH REMINDER] To: ${TEST_PHONE} | User: ${user.name} @ ${timeSlot} | Meds: ${medicines.length} | "${message}"`);
+      console.log(`[BATCH REMINDER] To: ${user.phoneNumber} | User: ${user.name} @ ${timeSlot} | Meds: ${medicines.length} | "${message}"`);
 
-      const result = await sendWhatsApp(TEST_PHONE, message);
+      const result = await sendWhatsApp(user.phoneNumber, message);
       if (result.success) sentCount++;
     }
 
@@ -85,7 +88,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       message: `Reminders sent for ${grouped.size} time slot(s)`,
-      phone: TEST_PHONE,
+      phone: user.phoneNumber,
       slots: grouped.size,
     }, { status: 200 });
   } catch (e) {

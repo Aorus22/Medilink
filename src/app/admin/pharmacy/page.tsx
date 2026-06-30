@@ -467,7 +467,7 @@ function Pharmacy() {
                 setConfirmModal({
                   open: true,
                   title: "Kirim pengingat sekarang?",
-                  description: "Mengingatkan semua obat aktif untuk pasien ini. Pesan akan dikirim ke nomor uji coba +6289636843541.",
+                  description: "Mengingatkan semua obat aktif untuk pasien ini.",
                   confirmText: "Ya, Kirim",
                   onConfirm: async () => {
                     setConfirmModal((p) => ({ ...p, open: false }));
