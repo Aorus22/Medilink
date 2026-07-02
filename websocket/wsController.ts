@@ -1,6 +1,8 @@
 import { Server as HTTPServer, IncomingMessage, ServerResponse } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { parse } from 'url';
+import { loadLatestSnapshot, VendingSnapshot } from '../Daemon/vendingDaemon';
+import { onVendingSnapshot } from '../src/lib/vending-broadcast';
 
 interface SensorData {
   timestamp: string;
@@ -13,6 +15,7 @@ interface SensorData {
 
 let wss: WebSocketServer | null = null;
 let latestSensorData: SensorData | null = null;
+let latestVendingSnapshot: VendingSnapshot | null = null;
 
 // const generateSensorData = (): SensorData => ({
 //   timestamp: new Date().toISOString(),
@@ -21,6 +24,8 @@ let latestSensorData: SensorData | null = null;
 //   heartrate: (60 + Math.random() * 40).toFixed(0),
 //   blood_pressure: `${110 + Math.floor(Math.random() * 10)}/${70 + Math.floor(Math.random() * 10)}`,
 // });
+
+
 
 export const handlePostSensorData = async (req: IncomingMessage, res: ServerResponse) => {
   if (req.method === 'POST' && parse(req.url || '').pathname === '/api/send-sensor-data') {
@@ -89,7 +94,7 @@ export const setupWebSocketOnUpgrade = (server: HTTPServer) => {
     }
   });
 
-  wss.on('connection', (ws: WebSocket) => {
+  wss.on('connection', async (ws: WebSocket) => {
     console.log('✅ Client connected to /api/ws');
 
     ws.send(
@@ -98,6 +103,23 @@ export const setupWebSocketOnUpgrade = (server: HTTPServer) => {
         message: 'Connected to real-time sensor server',
       })
     );
+
+    // Send initial vending snapshot if available
+    try {
+      if (!latestVendingSnapshot) {
+        latestVendingSnapshot = await loadLatestSnapshot();
+      }
+      if (latestVendingSnapshot) {
+        ws.send(
+          JSON.stringify({
+            type: 'vending_snapshot',
+            data: latestVendingSnapshot,
+          })
+        );
+      }
+    } catch (err) {
+      console.error('Failed to send initial vending snapshot:', err);
+    }
 
     // const intervalId = setInterval(() => {
     //   if (ws.readyState === WebSocket.OPEN && latestSensorData) {
@@ -136,4 +158,20 @@ export const setupWebSocketOnUpgrade = (server: HTTPServer) => {
   }, 30000);
 
   wss.on('close', () => clearInterval(pingInterval));
+
+  // Subscribe to vending snapshot broadcasts
+  onVendingSnapshot((snapshot) => {
+    latestVendingSnapshot = snapshot;
+    if (!wss) return;
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(
+          JSON.stringify({
+            type: 'vending_snapshot',
+            data: snapshot,
+          })
+        );
+      }
+    });
+  });
 };

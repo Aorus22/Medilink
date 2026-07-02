@@ -16,6 +16,7 @@ async function main() {
   await prisma.mriTest.deleteMany();
   await prisma.urineTest.deleteMany();
   await prisma.bloodTest.deleteMany();
+  await prisma.vendingMachineSnapshot.deleteMany();
   await prisma.medicine.deleteMany();
   await prisma.user.deleteMany();
   await prisma.doctor.deleteMany();
@@ -271,6 +272,36 @@ async function main() {
   });
 
   console.log("practiceHour added:", practiceHour);
+
+  // Seed initial vending machine snapshot
+  const existingSnapshot = await prisma.vendingMachineSnapshot.findFirst({
+    where: { machineId: "PS-001" },
+  });
+  if (!existingSnapshot) {
+    await prisma.vendingMachineSnapshot.create({
+      data: {
+        machineId: "PS-001",
+        state: "idle",
+        temperature: 26.8,
+        humidity: 53.2,
+        fan: 30,
+        light: 0,
+        feeder: [
+          { channel: 1, medicine: "Amoxicillin 500mg", stock: 32 },
+          { channel: 2, medicine: "Paracetamol 500mg", stock: 18 },
+          { channel: 3, medicine: "Ibuprofen 400mg", stock: 24 },
+          { channel: 4, medicine: "Omeprazole 20mg", stock: 15 },
+          { channel: 5, medicine: "Cetirizine 10mg", stock: 28 },
+          { channel: 6, medicine: "Metformin 500mg", stock: 12 },
+          { channel: 7, medicine: "", stock: 0 },
+          { channel: 8, medicine: "Albendazole 400mg", stock: 11 },
+        ],
+      },
+    });
+    console.log("VendingMachineSnapshot seeded for PS-001");
+  } else {
+    console.log("VendingMachineSnapshot already exists, skipping seed");
+  }
 }
 
 main()

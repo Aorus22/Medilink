@@ -11,7 +11,7 @@ import { Suspense, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import SearchableSelect from "@/components/SearchableSelect";
 import ConfirmModal from "@/components/ConfirmModal";
-import { dispenseBatch, DispenseItem } from "@/lib/vending-machine";
+import { dispenseBatch, clearVmApiUrlCache, DispenseItem } from "@/lib/vending-machine";
 
 const getInitials = (name: string) => {
   return name
@@ -106,8 +106,8 @@ function Pharmacy() {
     tanggalSelesaiObat: "",
   });
 
-  // Master data medicines
-  const [medicines, setMedicines] = useState<{ id: number; namaObat: string; harga: number }[]>([]);
+  // Vending machine snapshot medicines
+  const [vendingMedicines, setVendingMedicines] = useState<{ channel: number; namaObat: string; stock: number }[]>([]);
 
   const [medications, setMedications] = useState([]);
 
@@ -120,6 +120,40 @@ function Pharmacy() {
     cancelText?: string;
     onConfirm: () => void;
   }>({ open: false, title: "", onConfirm: () => {} });
+
+  // Vending machine settings (DB persisted)
+  const [showSettings, setShowSettings] = useState(false);
+  const [vmApiUrl, setVmApiUrl] = useState("");
+  const [savedVmApiUrl, setSavedVmApiUrl] = useState("");
+
+  useEffect(() => {
+    fetch("/api/system-settings")
+      .then((r) => r.json())
+      .then((data) => {
+        const url = data.vmApiUrl || "";
+        setSavedVmApiUrl(url);
+        setVmApiUrl(url);
+      })
+      .catch(() => {});
+  }, []);
+
+  const saveVmApiUrl = async () => {
+    const url = vmApiUrl.trim();
+    try {
+      const res = await fetch("/api/system-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vmApiUrl: url }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      clearVmApiUrlCache();
+      setSavedVmApiUrl(url);
+      toast.success(url ? "Vending Machine API Updated" : "Using default mock API");
+      setShowSettings(false);
+    } catch (err: any) {
+      toast.error("Failed to save: " + err.message);
+    }
+  };
 
   // Vending machine mode
   const [vendingMode, setVendingMode] = useState(false);
@@ -142,20 +176,25 @@ function Pharmacy() {
     }
   }, [searchParams]);
 
-  // Fetch master medicines on mount
-  const fetchMedicines = async () => {
+  // Fetch vending machine snapshot medicines
+  const fetchVendingMedicines = async () => {
     try {
-      const res = await fetch("/api/medicine");
+      const res = await fetch("/api/vending-machine/snapshot");
       if (res.ok) {
-        setMedicines(await res.json());
+        const data = await res.json();
+        const feeder = (data.feeder || []) as { channel: number; medicine: string; stock: number }[];
+        const available = feeder
+          .filter((f: any) => f.medicine?.trim())
+          .map((f: any) => ({ channel: f.channel, namaObat: f.medicine, stock: f.stock }));
+        setVendingMedicines(available);
       }
     } catch {
-      console.error("Failed to fetch medicines");
+      console.error("Failed to fetch vending snapshot");
     }
   };
 
   useEffect(() => {
-    fetchMedicines();
+    fetchVendingMedicines();
   }, []);
 
   // Fetch users when showing user list
@@ -231,13 +270,13 @@ function Pharmacy() {
     setShowUserList(false);
   };
 
-  const handleMedicineSelect = (medicineId: string) => {
-    const medicine = medicines.find((m) => String(m.id) === medicineId);
-    if (!medicine) return;
+  const handleVendingMedicineSelect = (channel: string) => {
+    const item = vendingMedicines.find((m) => String(m.channel) === channel);
+    if (!item) return;
     setFormValue((prev) => ({
       ...prev,
-      namaObat: medicine.namaObat,
-      medicineId,
+      namaObat: item.namaObat,
+      medicineId: "",
     }));
   };
 
@@ -358,7 +397,7 @@ function Pharmacy() {
     });
     setEditingMedicationId(data.id);
     setShowCreateMedication(true);
-    fetchMedicines();
+    fetchVendingMedicines();
   };
 
   async function handleDispense() {
@@ -421,15 +460,28 @@ function Pharmacy() {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">
-          {isDoctor ? "Doctor Pharmacy" : "Medical Checkup"}
-        </h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold">PharmaSwift</h1>
+          <button
+            onClick={() => { setVmApiUrl(savedVmApiUrl); setShowSettings(true); }}
+            className="p-2 text-gray-500 hover:text-teal-600 hover:bg-teal-50 rounded-full transition"
+            title="Vending Machine Settings"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+          {savedVmApiUrl && (
+            <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full">Custom API</span>
+          )}
+        </div>
       </div>
 
-      <div className="flex justify-between">
+      <div className="flex justify-between items-center mb-5">
         {/* User Profile */}
         <div
-          className="mb-5 cursor-pointer"
+          className="cursor-pointer"
           onClick={() => setShowUserList(true)}
         >
           <div className="flex items-center gap-3">
@@ -461,7 +513,7 @@ function Pharmacy() {
 
         {/* Add Medication */}
         {selectedUser && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <button
               onClick={() => {
                 setConfirmModal({
@@ -486,14 +538,14 @@ function Pharmacy() {
                   },
                 });
               }}
-              className="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 transition flex items-center gap-2"
+              className="bg-teal-500 text-white h-9 px-3 text-sm rounded-lg hover:bg-teal-600 transition flex items-center gap-1.5"
             >
               <i className="bi bi-bell"></i>
               <span>Remind All</span>
             </button>
             <button
               onClick={() => setVendingMode(!vendingMode)}
-              className={`px-4 py-2 rounded-lg transition flex items-center gap-2 ${
+              className={`h-9 px-3 text-sm rounded-lg transition flex items-center gap-1.5 ${
                 vendingMode
                   ? "bg-orange-500 text-white hover:bg-orange-600"
                   : "bg-amber-100 text-amber-700 hover:bg-amber-200"
@@ -517,9 +569,9 @@ function Pharmacy() {
                   tanggalSelesaiObat: "",
                 });
                 setShowCreateMedication(true);
-                fetchMedicines();
+                fetchVendingMedicines();
               }}
-              className="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 transition flex items-center gap-2"
+              className="bg-teal-500 text-white h-9 px-3 text-sm rounded-lg hover:bg-teal-600 transition flex items-center gap-1.5"
             >
               <i className="bi bi-plus-lg"></i>
               <span>Add Medication</span>
@@ -653,19 +705,22 @@ function Pharmacy() {
 
             <div className="max-h-96 overflow-y-auto">
                 <div className="p-4 border-b grid gap-3">
-                  {/* Medicine Name — searchable select from master data */}
+                  {/* Medicine Name — pick from vending machine snapshot */}
                   <SearchableSelect
-                    label="Medicine Name"
-                    placeholder="Pilih obat..."
+                    label="Medicine Name (Vending Machine)"
+                    placeholder="Pilih obat dari vending machine..."
                     searchPlaceholder="Cari obat..."
-                    emptyMessage="Obat tidak ditemukan"
-                    options={medicines.map((m) => ({
-                      value: String(m.id),
+                    emptyMessage="Tidak ada obat di vending machine"
+                    options={vendingMedicines.map((m) => ({
+                      value: String(m.channel),
                       label: m.namaObat,
-                      subtitle: `Rp${m.harga.toLocaleString()}`,
+                      subtitle: `Ch#${m.channel} — stock: ${m.stock}`,
                     }))}
-                    value={formValue.medicineId}
-                    onChange={handleMedicineSelect}
+                    value={(() => {
+                      const found = vendingMedicines.find((m) => m.namaObat === formValue.namaObat);
+                      return found ? String(found.channel) : "";
+                    })()}
+                    onChange={handleVendingMedicineSelect}
                   />
 
                 <div>
@@ -873,6 +928,76 @@ function Pharmacy() {
         onConfirm={confirmModal.onConfirm}
         onCancel={() => setConfirmModal((p) => ({ ...p, open: false }))}
       />
+
+      {/* Vending Machine Settings Sheet */}
+      {showSettings && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/40 transition-opacity"
+            onClick={() => setShowSettings(false)}
+          />
+          {/* Sheet Panel */}
+          <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col z-10 animate-slide-in-right">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h3 className="text-lg font-semibold">Vending Machine Settings</h3>
+              <button
+                onClick={() => setShowSettings(false)}
+                className="text-gray-500 hover:text-gray-700 transition"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4 flex-1 overflow-y-auto">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Vending Machine API URL
+                </label>
+                <input
+                  type="text"
+                  value={vmApiUrl}
+                  onChange={(e) => setVmApiUrl(e.target.value)}
+                  className="w-full px-4 py-2 border rounded-lg border-gray-300 focus:outline-none focus:border-teal-500 transition"
+                  placeholder="https://vending-machine.local/api/dispense"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  API endpoint yang disediakan mesin untuk menerima perintah dispensing. Biarkan kosong untuk menggunakan mock internal.
+                </p>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-600 space-y-1">
+                <p className="font-semibold text-gray-700">Contoh payload yang dikirim:</p>
+                <pre className="bg-gray-800 text-gray-100 p-2 rounded overflow-x-auto">{JSON.stringify({
+                  patient_id: "RX-20250722-0001",
+                  machine_id: "PS-001",
+                  items: [
+                    { channel: 1, medicine: "Amoxicillin 500mg", qty: 1 },
+                    { channel: 2, medicine: "Albendazole 400mg", qty: 1 },
+                  ]
+                }, null, 2)}</pre>
+              </div>
+            </div>
+
+            <div className="flex justify-end items-center p-4 border-t gap-2 bg-gray-50">
+              <button
+                onClick={() => setShowSettings(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveVmApiUrl}
+                className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

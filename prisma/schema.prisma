@@ -179,6 +179,12 @@ model BloodTest {
   user   User @relation(fields: [userId], references: [id])
 }
 
+model SystemSetting {
+  id        String   @id @default("default")
+  vmApiUrl  String   @default("")
+  updatedAt DateTime @updatedAt
+}
+
 model VendingMachineSnapshot {
   id          Int      @id @default(autoincrement())
   machineId   String

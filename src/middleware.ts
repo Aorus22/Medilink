@@ -20,6 +20,10 @@ export async function middleware(req: NextRequest) {
     '/api/auth/login',
     '/api/auth/register',
     '/api/auth/me',
+    '/api/vending-machine/ingest',
+    '/api/vending-machine/mock',
+    '/api/vending-machine/snapshot',
+    '/api/system-settings',
   ]
 
   if (publicRoutes.includes(pathname)) {

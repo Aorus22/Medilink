@@ -32,3 +32,16 @@ body,
 .metric-card {
   @apply bg-white p-6 rounded-xl shadow-md text-center;
 }
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.25s ease-out forwards;
+}

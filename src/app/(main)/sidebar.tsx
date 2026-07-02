@@ -32,7 +32,7 @@ export default function Sidebar({setRightbarOpen, setSidebarOpen}: any) {
           <SidebarLink href="/doctors" icon="bi-person-standing" text="Doctors" handleNavigate={handleNavigate}/>
           <SidebarLink href="/healthcare" icon="bi-bandaid" text="Healthcare" handleNavigate={handleNavigate}/>
           <SidebarLink href="/laboratory" icon="bi-wallet" text="Laboratory" handleNavigate={handleNavigate}/>
-          <SidebarLink href="/pharmacy" icon="bi-capsule" text="Pharmacy" handleNavigate={handleNavigate}/>
+          <SidebarLink href="/pharmacy" icon="bi-capsule" text="PharmaSwift" handleNavigate={handleNavigate}/>
           <SidebarLink href="/healthcare-monitoring" icon="bi-gear-wide" text="Healthcare Monitoring" handleNavigate={handleNavigate}/>
           <SidebarLink href="/message" icon="bi-chat-left-dots" text="Message" handleNavigate={handleNavigate}/>
         </nav>
