@@ -1,4 +1,4 @@
-import { PrismaClient } from "#/prisma/db";
+import { PrismaClient } from '@prisma/client';
 import { NextRequest } from "next/server";
 
 export interface AuthContext {

@@ -1,6 +1,6 @@
 "use client";
 
-import { User } from "#/prisma/db";
+import { User } from '@prisma/client';
 import { MedicationInfo } from "@/app/api/pharmacy/route";
 import Table from "@/components/Table";
 import { Search, Trash2, Pencil } from "lucide-react";

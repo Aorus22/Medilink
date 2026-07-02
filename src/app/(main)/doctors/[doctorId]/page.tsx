@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import { Doctor } from "#/prisma/db";
+import { Doctor } from '@prisma/client';
 
 const doctorPlaceholder = "/assets/dashboard/doctor.svg";
 

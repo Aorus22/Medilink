@@ -1,6 +1,4 @@
-import { Doctor } from "./db";
-
-const { PrismaClient } = require('./db');
+import { PrismaClient, Doctor } from '@prisma/client';
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
 

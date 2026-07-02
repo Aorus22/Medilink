@@ -34,6 +34,11 @@ COPY --from=builder /app/websocket ./websocket
 COPY --from=builder /app/server.ts ./server.ts
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY --from=builder /app/src/lib ./src/lib
+
+# Daemon directory (scheduler + vending daemon)
 COPY Daemon ./Daemon
+
+# Generate Prisma client for runtime (seed, daemon)
+RUN bunx prisma generate
 
 CMD ["supervisord", "-c", "/app/Daemon/supervisord.conf"]

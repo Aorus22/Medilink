@@ -1,4 +1,4 @@
-import { PrismaClient } from '#/prisma/db';
+import { PrismaClient } from '@prisma/client';
 import { sendWhatsApp, buildReminderMessage, MedicineItem } from '@/lib/WhatsApp';
 
 const prisma = new PrismaClient();

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "#/prisma/db";
+import { PrismaClient } from '@prisma/client';
 import { getAuthContext } from "@/lib/auth";
 import { sendWhatsApp, buildReminderMessage, getNearestTime, MedicineItem } from "@/lib/WhatsApp";
 

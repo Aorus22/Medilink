@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
-import { PrismaClient } from '#/prisma/db';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'secret-key');

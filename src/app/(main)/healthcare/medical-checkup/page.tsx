@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { HistoricalData } from "#/prisma/db";
+import { HistoricalData } from '@prisma/client';
 import { useEffect, useState } from "react";
 import MedicalCheckupChart from "@/components/MedicalCheckUpChart";
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Doctor, PrismaClient } from '#/prisma/db';
+import { Doctor, PrismaClient } from '@prisma/client';
 import { getAuthContext } from '@/lib/auth';
 
 const prisma = new PrismaClient();
