@@ -10,7 +10,7 @@ services:
       - pharmashift-pgdata:/var/lib/postgresql/data
 
   app:
-    image: aorus22/pharmashift:latest
+    build: .
     container_name: pharmashift-app
     restart: always
     env_file: .env
