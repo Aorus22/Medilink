@@ -1,46 +1,30 @@
-"use client"
+"use client";
 
-import Navbar from "@/components/scenes/navbar";
-import Home from "@/components/scenes/home";
-import Benefits from "@/components/scenes/services";
-import About from "@/components/scenes/about";
-import Team from "@/components/scenes/team";
-import Footer from "@/components/scenes/footer";
-import { SelectedPage } from "@/utils/types";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
-const Dashboard = () => {
-  const [selectedPage, setSelectedPage] = useState<SelectedPage>(
-    SelectedPage.Home,
-  );
-  const [isTopOfPage, setIsTopOfPage] = useState<boolean>(true);
+const RootPage = () => {
+  const { user } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY === 0) {
-        setIsTopOfPage(true);
-        setSelectedPage(SelectedPage.Home);
+    if (user) {
+      if (user.role === "ADMIN" || user.role === "DOCTOR") {
+        router.push("/admin/dashboard");
+      } else {
+        router.push("/dashboard");
       }
-      if (window.scrollY !== 0) setIsTopOfPage(false);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    } else {
+      router.push("/login");
+    }
+  }, [user, router]);
 
   return (
-    <div className="app bg-gray-20">
-      <Navbar
-        isTopOfPage={isTopOfPage}
-        selectedPage={selectedPage}
-        setSelectedPage={setSelectedPage}
-      />
-      <Home setSelectedPage={setSelectedPage} />
-      <About setSelectedPage={setSelectedPage} />
-      <Benefits setSelectedPage={setSelectedPage} />
-      <Team setSelectedPage={setSelectedPage} />
-      <Footer />
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
     </div>
   );
 };
 
-export default Dashboard;
+export default RootPage;

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '#/prisma/db';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import { SignJWT } from 'jose';
 import { cookies } from 'next/headers';
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'secret-key');
 
 type Role = 'USER' | 'ADMIN' | 'DOCTOR';
 
@@ -20,7 +20,10 @@ const setAuthCookie = async (user: any, role: Role, secure: boolean) => {
     if (doctor) payload.doctorId = doctor.id;
   }
 
-  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+  const token = await new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('1h')
+    .sign(JWT_SECRET);
 
   (await cookies()).set({
     name: 'auth_token',
