@@ -10,9 +10,11 @@ export async function POST(req: NextRequest) {
     
     const genAI = new GoogleGenerativeAI(apiKey);
     const { message, history } = await req.json();
-    
+
+    const modelName = process.env.GEMINI_MODEL || "gemma-4-31b-it";
+
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
+      model: modelName,
       
       systemInstruction: `
         Anda adalah "Asisten Sehat AI", seorang asisten virtual yang berpengetahuan dan simpatik.
